@@ -60,7 +60,7 @@ module SpoilerBot
         halt
       end
       status 200
-      reply = { username: 'spoilerbot', icon_emoji: ':ryan:', text: @card_url }
+      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: @card_url }
       return reply.to_json
     end
   end
