@@ -11,7 +11,7 @@ module SpoilerBot
   class Web < Sinatra::Base
 
     before do
-      #return 401 unless request["token"] == ENV['SLACK_TOKEN']
+      return 401 unless request["token"] == ENV['SLACK_TOKEN']
     end
 
     @@card_ids = []
