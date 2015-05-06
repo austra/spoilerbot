@@ -31,7 +31,7 @@ module SpoilerBot
       end
 
       pages.uniq.count.times do |i|
-        url = "http://gatherer.wizards.com/Pages/Search/Default.aspx?page=" + i.to_s + "0&sort=cn+&output=checklist&set=%5B%22Dragons%20of%20Tarkir%22%5D"
+        url = "http://gatherer.wizards.com/Pages/Search/Default.aspx?page=" + i.to_s + "&sort=cn+&output=checklist&set=%5B%22Dragons%20of%20Tarkir%22%5D"
         doc = Nokogiri::HTML(open(url))
         links = doc.css('.name a')
         
