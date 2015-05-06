@@ -5,6 +5,7 @@ require 'sinatra'
 require 'nokogiri'
 require 'open-uri'
 require 'json'
+require 'pry'
 
 module SpoilerBot
   class Web < Sinatra::Base
@@ -25,18 +26,17 @@ module SpoilerBot
       doc = Nokogiri::HTML(open(url))
 
       paging_control = doc.css('.pagingcontrols a')
-      
       paging_control.each do |page|
-        pages << page.match(/page=(\d+)/)[1].to_i
+        pages << page["href"].match(/page=(\d+)/)[1].to_i
       end
 
-      page.count.times do |i|
+      pages.uniq.count.times do |i|
         url = "http://gatherer.wizards.com/Pages/Search/Default.aspx?page=" + i.to_s + "0&sort=cn+&output=checklist&set=%5B%22Dragons%20of%20Tarkir%22%5D"
         doc = Nokogiri::HTML(open(url))
         links = doc.css('.name a')
         
         links.each do |link|
-          @@card_ids << link.partition('=').last
+          @@card_ids << link["href"].partition('=').last
         end
       end
     end
