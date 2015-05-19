@@ -6,23 +6,29 @@ require 'nokogiri'
 require 'open-uri'
 require 'json'
 require 'pry'
+require 'yaml'
 
 module SpoilerBot
   class Web < Sinatra::Base
 
     before do
-      return 401 unless request["token"] == ENV['SLACK_TOKEN']
+      #return 401 unless request["token"] == ENV['SLACK_TOKEN']
     end
 
-    @@card_ids = []
+    
+    
+    configure do
+      @@cards = []
 
-    def get_cards_from_gatherer
       pages = []
 
+      set = "&set=[%22Dragons%20of%20Tarkir%22]"
+      base_url = "http://gatherer.wizards.com/Pages/Search/Default.aspx"
+      url_options = "?page=0&sort=cn+&output=standard"
       #image_url = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=card_id&type=card"
-      #base_url = "http://gatherer.wizards.com/Pages/Search/Default.aspx"
-      #url_options = "?page=0&sort=cn+&output=checklist&set=%5B%22Dragons%20of%20Tarkir%22%5D"
-      url = "http://gatherer.wizards.com/Pages/Search/Default.aspx?page=0&sort=cn+&output=checklist&set=%5B%22Dragons%20of%20Tarkir%22%5D"
+      
+      url = base_url + url_options + set
+
       doc = Nokogiri::HTML(open(url))
 
       paging_control = doc.css('.pagingcontrols a')
@@ -31,28 +37,45 @@ module SpoilerBot
       end
 
       pages.uniq.count.times do |i|
-        url = "http://gatherer.wizards.com/Pages/Search/Default.aspx?page=" + i.to_s + "&sort=cn+&output=checklist&set=%5B%22Dragons%20of%20Tarkir%22%5D"
-        doc = Nokogiri::HTML(open(url))
-        links = doc.css('.name a')
-        
-        links.each do |link|
-          @@card_ids << link["href"].partition('=').last
+        url = "http://gatherer.wizards.com/Pages/Search/Default.aspx?page=" + i.to_s + "&sort=cn+&output=standard" + set
+        if i > 0 
+          doc = Nokogiri::HTML(open(url))
         end
+        card_table = doc.css('.cardItem')
+        @@cards << Hash[card_table.map{|c| [
+         :name => c.css('.cardTitle').text.strip,
+         :rarity => c.css('.setVersions img').attr('src').text.split('rarity=')[-1],
+         :cmc => c.css('.convertedManaCost').text.strip,
+         :type => c.css('.typeLine').text.strip,
+         :image_url => c.css('.leftCol img').attr('src').text.gsub("../../",""),
+         :rules => c.css('.rulesText p').map(&:text).join("\n")]}]
       end
     end
 
-    def get_random_card
-      return @@card_ids.sample
+    def get_random_card(rarity, cmc, terms)
+      binding.pry
+      card = @@cards.sample
+
+      image_params = card[4]
+      base_image_url = "http://gatherer.wizards.com/"
+      return base_image_url + image_params
+
     end
 
     def get_card_image(card)
       return "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + card + "&type=card"
     end
 
+    
+
     post "/spoiler" do
-      get_cards_from_gatherer
-      card = get_random_card
-      @card_url = get_card_image(card)
+      puts params
+      #sinatra optional params /spoiler/?:p1?/?:p2?
+      rarity = params[:rarity] ||= ""
+      cmc = params[:cmc] ||= ""
+      terms = params[:terms] ||= ""
+
+      @card_url = get_random_card(rarity, cmc, terms)
       begin
 
       rescue => e
