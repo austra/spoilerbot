@@ -10,6 +10,7 @@ SpoilerBot uses a Slack Outgoing WebHook integration for catching the `spoiler` 
 
 ### Local
 
+
 ```
 $ bundle install
 $ export SLACK_TOKEN=...
@@ -23,7 +24,6 @@ $ heroku create
 $ heroku config:set SLACK_TOKEN=...
 $ git push heroku master
 ```
-
 ## WebHook Settings
 
 Once SpoilerBot is deployed, go back to your Outgoing Webhook page and configure the  Integration Settings to your needs. G

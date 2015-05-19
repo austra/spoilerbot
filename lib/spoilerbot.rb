@@ -70,6 +70,7 @@ module SpoilerBot
 
     post "/spoiler" do
       puts params
+      pp params
       #sinatra optional params /spoiler/?:p1?/?:p2?
       rarity = params[:rarity] ||= ""
       cmc = params[:cmc] ||= ""
