@@ -53,14 +53,14 @@ module SpoilerBot
     end
 
     def get_random_card(rarity, cmc, type, rules, name)
-      cards = @@cards.select {|card| card[:rarity] == rarity} if !rarity.empty?
+      cards = @@cards.select {|card| card[:rarity].downcase == rarity} if !rarity.empty?
       cards = cards.select {|card| card[:cmc] == cmc} if !cmc.empty?
-      cards = cards.select {|card| card[:type] == cmc} if !type.empty?
-      cards = cards.select {|card| card[:rules] == cmc} if !rules.empty?
-      cards = cards.select {|card| card[:name] == cmc} if !name.empty?
+      cards = cards.select {|card| card[:type].downcase == type} if !type.empty?
+      cards = cards.select {|card| card[:rules] == rules} if !rules.empty?
+      cards = cards.select {|card| card[:name] == name} if !name.empty?
       card = cards.sample
 
-      image_params = card[4]
+      image_params = card[:image_url]
       base_image_url = "http://gatherer.wizards.com/"
       return base_image_url + image_params
 
@@ -78,12 +78,12 @@ module SpoilerBot
         h
       end
 
-      rarity = filter[:rarity] ||= ""
-      cmc = filter[:cmc] ||= ""
-      type = filter[:type] ||= ""
-      rules = filter[:rules] ||= ""
-      name = filter[:name] ||= ""
-      binding.pry
+      rarity = filter["rarity"].downcase ||= ""
+      cmc = filter["cmc"] ||= ""
+      type = filter["type"].downcase ||= ""
+      rules = filter["rules"] ||= ""
+      name = filter["name"] ||= ""
+      
       @card_url = get_random_card(rarity, cmc, type, rules, name)
       begin
 
