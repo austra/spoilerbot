@@ -53,7 +53,8 @@ module SpoilerBot
     end
 
     def get_random_card(rarity, cmc, type, rules, name)
-      cards = @@cards.select {|card| card[:rarity].downcase == rarity} if !rarity.empty?
+      cards = @@cards
+      cards = cards.select {|card| card[:rarity].downcase == rarity} if !rarity.empty?
       cards = cards.select {|card| card[:cmc] == cmc} if !cmc.empty?
       cards = cards.select {|card| card[:type].downcase == type} if !type.empty?
       cards = cards.select {|card| card[:rules] == rules} if !rules.empty?
@@ -72,7 +73,7 @@ module SpoilerBot
 
     post "/spoiler" do
       input = params[:text].gsub(params[:trigger_word],"").strip
-      filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=[]}) do |h, s|
+      filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
         k,v = s.split(/=/)
         h[k] << v
         h
