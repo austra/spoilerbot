@@ -22,7 +22,9 @@ module SpoilerBot
 
       pages = []
 
-      expansion = "&set=[%22Dragons%20of%20Tarkir%22]"
+      expansion = "&set=[%22Battle%20for%20Zendikar%22]"
+      #"&set=[%22Dragons%20of%20Tarkir%22]"
+      
       base_url = "http://gatherer.wizards.com/Pages/Search/Default.aspx"
       url_options = "?page=0&sort=cn+&output=standard"
       #image_url = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=card_id&type=card"
@@ -53,7 +55,8 @@ module SpoilerBot
     end
 
     def get_random_card(rarity, cmc, type, rules, name)
-      cards = @@cards.select {|card| card[:rarity].downcase == rarity} if !rarity.empty?
+      cards = @@cards
+      cards = cards.select {|card| card[:rarity].downcase == rarity} if !rarity.empty?
       cards = cards.select {|card| card[:cmc] == cmc} if !cmc.empty?
       cards = cards.select {|card| card[:type].downcase == type} if !type.empty?
       cards = cards.select {|card| card[:rules] == rules} if !rules.empty?
@@ -72,7 +75,7 @@ module SpoilerBot
 
     post "/spoiler" do
       input = params[:text].gsub(params[:trigger_word],"").strip
-      filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=[]}) do |h, s|
+      filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
         k,v = s.split(/=/)
         h[k] << v
         h
