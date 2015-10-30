@@ -16,15 +16,14 @@ module SpoilerBot
     end
 
     
-    
+    #http://gatherer.wizards.com/Pages/Search/Default.aspx?page=0&sort=cn+&output=standard&set=["Battle%20for%20Zendikar"]
     configure do
       @@cards = []
 
       pages = []
 
       expansion = "&set=[%22Battle%20for%20Zendikar%22]"
-      #"&set=[%22Dragons%20of%20Tarkir%22]"
-      
+
       base_url = "http://gatherer.wizards.com/Pages/Search/Default.aspx"
       url_options = "?page=0&sort=cn+&output=standard"
       #image_url = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=card_id&type=card"
@@ -56,11 +55,11 @@ module SpoilerBot
 
     def get_random_card(rarity, cmc, type, rules, name)
       cards = @@cards
-      cards = cards.select {|card| card[:rarity].downcase == rarity} if !rarity.empty?
+      cards = cards.select {|card| card[:rarity].downcase == rarity.downcase} if !rarity.empty?
       cards = cards.select {|card| card[:cmc] == cmc} if !cmc.empty?
-      cards = cards.select {|card| card[:type].downcase == type} if !type.empty?
-      cards = cards.select {|card| card[:rules] == rules} if !rules.empty?
-      cards = cards.select {|card| card[:name] == name} if !name.empty?
+      cards = cards.select {|card| card[:type].downcase.include? type.downcase} if !type.empty?
+      cards = cards.select {|card| card[:rules].include? rules} if !rules.empty?
+      cards = cards.select {|card| card[:name].downcase.include? name.downcase} if !name.empty?
       card = cards.sample
 
       image_params = card[:image_url]
@@ -80,13 +79,12 @@ module SpoilerBot
         h[k] << v
         h
       end
-
       rarity = filter["rarity"].downcase ||= ""
       cmc = filter["cmc"] ||= ""
       type = filter["type"].downcase ||= ""
       rules = filter["rules"] ||= ""
       name = filter["name"] ||= ""
-      
+
       @card_url = get_random_card(rarity, cmc, type, rules, name)
       begin
 
