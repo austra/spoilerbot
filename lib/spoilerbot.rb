@@ -87,16 +87,8 @@ module SpoilerBot
     end
 
     post "/spoiler" do
-      puts "start post log"
-      puts "text: " + params[:text]
-      puts "trigger_word" + params[:trigger_word]
-      if params.has_key?(:text) && params.has_key?(:trigger_word)
-        puts "true"
-      else
-        puts "false"
-      end
-      if params.has_key?(:text) && params.has_key?(:trigger_word)
-        puts "getting params:"
+      if params[:text] && params[:trigger_word]
+        puts "building filter: "
         input = params[:text].gsub(params[:trigger_word],"").strip
         filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
           k,v = s.split(/=/)
