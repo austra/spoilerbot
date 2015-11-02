@@ -56,7 +56,7 @@ module SpoilerBot
     def get_random_card(filter)
       cards = @@cards
       cards = cards.select {|card| card[:rarity].downcase == filter[:rarity].downcase} if filter[:rarity]
-      cards = cards.select {|card| card[:cmc] == cmc} if filter[:cmc]
+      cards = cards.select {|card| card[:cmc] == filter[:cmc]} if filter[:cmc]
       cards = cards.select {|card| card[:type].downcase.include? filter[:type].downcase} if filter[:type]
       cards = cards.select {|card| card[:rules].include? rules} if filter[:rules]
       cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if filter[:name]
@@ -88,7 +88,6 @@ module SpoilerBot
 
     post "/spoiler" do
       if params[:text] && params[:trigger_word]
-        puts "building filter: "
         input = params[:text].gsub(params[:trigger_word],"").strip
         filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
           k,v = s.split(/=/)
@@ -99,9 +98,7 @@ module SpoilerBot
       else
         filter = add_scope(params)
       end
-      puts "filter is here"
-      puts filter
-      puts "filter was here"
+
       @card_url = get_random_card(filter)
       begin
 
