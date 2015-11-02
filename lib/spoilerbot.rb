@@ -87,8 +87,10 @@ module SpoilerBot
     end
 
     post "/spoiler" do
-      
+      puts "###################"
+      puts params
       if params.has_key?(:text) && params.has_key?(:trigger_word)
+        puts "getting params:"
         input = params[:text].gsub(params[:trigger_word],"").strip
         filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
           k,v = s.split(/=/)
@@ -99,7 +101,8 @@ module SpoilerBot
       else
         filter = add_scope(params)
       end
-
+      puts "###################"
+      puts filter
       @card_url = get_random_card(filter)
       begin
 
