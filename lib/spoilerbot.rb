@@ -53,14 +53,14 @@ module SpoilerBot
       end
     end
 
-    def get_random_card(rarity, cmc, type, rules, name)
+    def get_random_card(filter)
       cards = @@cards
-      cards = cards.select {|card| card[:rarity].downcase == rarity.downcase} if !rarity.empty?
-      cards = cards.select {|card| card[:cmc] == cmc} if !cmc.empty?
-      cards = cards.select {|card| card[:type].downcase.include? type.downcase} if !type.empty?
-      cards = cards.select {|card| card[:rules].include? rules} if !rules.empty?
-      cards = cards.select {|card| card[:name].downcase.include? name.downcase} if !name.empty?
-      card = cards.sample
+      cards = cards.select {|card| card[:rarity].downcase == filter[:rarity].downcase} if filter[:rarity]
+      cards = cards.select {|card| card[:cmc] == cmc} if filter[:cmc]
+      cards = cards.select {|card| card[:type].downcase.include? filter[:type].downcase} if filter[:type]
+      cards = cards.select {|card| card[:rules].include? rules} if filter[:rules]
+      cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if filter[:name]
+      card  = cards.sample
 
       image_params = card[:image_url]
       base_image_url = "http://gatherer.wizards.com/"
@@ -70,6 +70,20 @@ module SpoilerBot
 
     def get_card_image(card)
       return "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=" + card + "&type=card"
+    end
+    
+    def add_scope(params)
+      filter = {}
+      params.each do |k,v|
+        filter[k.to_sym] = v
+      end
+      filter
+    end
+
+    get "/spoiler" do
+      filter = add_scope(params)
+      @card_url = get_random_card(filter)
+      haml :spoiler
     end
 
     post "/spoiler" do
@@ -81,25 +95,17 @@ module SpoilerBot
           h
         end
       else
-        filter = {}
-        params.each do |k,v|
-          filter[k] = v
-        end
+        filter = add_scope(params)
       end
-      
-      rarity = (filter["rarity"] ||= "").downcase
-      cmc = filter["cmc"] ||= ""
-      type = (filter["type"] ||= "").downcase
-      rules = filter["rules"] ||= ""
-      name = filter["name"] ||= ""
 
-      @card_url = get_random_card(rarity, cmc, type, rules, name)
+      @card_url = get_random_card(filter)
       begin
 
       rescue => e
         p e.message
         halt
       end
+
       status 200
       reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: @card_url }
       return reply.to_json

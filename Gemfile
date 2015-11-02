@@ -4,3 +4,4 @@ gem "sinatra"
 gem 'thin'
 gem 'nokogiri'
 gem 'pry'
+gem 'haml'
