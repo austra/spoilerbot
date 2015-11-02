@@ -73,15 +73,23 @@ module SpoilerBot
     end
 
     post "/spoiler" do
-      input = params[:text].gsub(params[:trigger_word],"").strip
-      filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
-        k,v = s.split(/=/)
-        h[k] << v
-        h
+      if params.has_key?(:text) && params.has_key?(:trigger_word)
+        input = params[:text].gsub(params[:trigger_word],"").strip
+        filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
+          k,v = s.split(/=/)
+          h[k] << v
+          h
+        end
+      else
+        filter = {}
+        params.each do |k,v|
+          filter[k] = v
+        end
       end
-      rarity = filter["rarity"].downcase ||= ""
+      
+      rarity = (filter["rarity"] ||= "").downcase
       cmc = filter["cmc"] ||= ""
-      type = filter["type"].downcase ||= ""
+      type = (filter["type"] ||= "").downcase
       rules = filter["rules"] ||= ""
       name = filter["name"] ||= ""
 
