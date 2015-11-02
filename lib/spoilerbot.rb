@@ -55,11 +55,11 @@ module SpoilerBot
 
     def get_random_card(filter)
       cards = @@cards
-      cards = cards.select {|card| card[:rarity].downcase == filter[:rarity].downcase} if filter[:rarity]
-      cards = cards.select {|card| card[:cmc] == filter[:cmc]} if filter[:cmc]
-      cards = cards.select {|card| card[:type].downcase.include? filter[:type].downcase} if filter[:type]
-      cards = cards.select {|card| card[:rules].include? rules} if filter[:rules]
-      cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if filter[:name]
+      cards = cards.select {|card| card[:rarity].downcase == filter[:rarity].downcase} if filter[:rarity].empty?
+      cards = cards.select {|card| card[:cmc] == filter[:cmc]} if filter[:cmc].empty?
+      cards = cards.select {|card| card[:type].downcase.include? filter[:type].downcase} if filter[:type].empty?
+      cards = cards.select {|card| card[:rules].include? rules} if filter[:rules].empty?
+      cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if filter[:name].empty?
       card  = cards.sample
 
       image_params = card[:image_url]
