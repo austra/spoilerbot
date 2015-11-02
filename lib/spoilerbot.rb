@@ -87,13 +87,15 @@ module SpoilerBot
     end
 
     post "/spoiler" do
+      
       if params.has_key?(:text) && params.has_key?(:trigger_word)
         input = params[:text].gsub(params[:trigger_word],"").strip
         filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
           k,v = s.split(/=/)
-          h[k] << v
+          h[k.to_sym] << v
           h
         end
+
       else
         filter = add_scope(params)
       end
