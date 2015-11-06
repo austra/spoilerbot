@@ -7,6 +7,7 @@ require 'open-uri'
 require 'json'
 require 'pry'
 require 'yaml'
+require 'typhoeus'
 
 module SpoilerBot
   class Web < Sinatra::Base
@@ -23,6 +24,7 @@ module SpoilerBot
 
       pages = []
 
+      @@heroku_url = "http://afternoon-reaches-1103.herokuapp.com"
       expansion = "&set=[%22Battle%20for%20Zendikar%22]"
 
       base_url = "http://gatherer.wizards.com/Pages/Search/Default.aspx"
@@ -83,8 +85,25 @@ module SpoilerBot
       image_params = card[:image_url]
       base_image_url = "http://gatherer.wizards.com/"
       return base_image_url + image_params
-
     end
+
+    def post_message
+      filter = add_scope(params)
+      card = get_random_card(filter)
+      card_url = get_card_url(card)
+      links = "<#{@@heroku_url}/post|Random Spoiler>"
+      text = "<#{card_url}> #{links}"
+
+
+      url = "https://hooks.slack.com/services/####/######/########"
+
+      response = Typhoeus.post(url, body: {"channel" => "#general", "text" => text}.to_json)
+      render text: '', status: :ok
+    end
+
+    get "/post" do
+      post_message
+    end    
 
     get "/spoiler" do
       filter = add_scope(params)
