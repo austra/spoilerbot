@@ -18,6 +18,7 @@ module SpoilerBot
     
     #http://gatherer.wizards.com/Pages/Search/Default.aspx?page=0&sort=cn+&output=standard&set=["Battle%20for%20Zendikar"]
     configure do
+      set :static_cache_control, [:public, max_age: 60 * 60 * 24 * 365]
       @@cards = []
 
       pages = []
