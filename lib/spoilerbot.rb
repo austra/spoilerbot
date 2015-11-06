@@ -62,10 +62,8 @@ module SpoilerBot
       cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if (filter[:name] && !filter[:name].empty?)
       card  = cards.sample
 
-      image_params = card[:image_url]
-      base_image_url = "http://gatherer.wizards.com/"
-      return base_image_url + image_params
-
+      return card
+      
     end
 
     def get_card_image(card)
@@ -80,9 +78,18 @@ module SpoilerBot
       filter
     end
 
+    def get_card_url(card)
+      image_params = card[:image_url]
+      base_image_url = "http://gatherer.wizards.com/"
+      return base_image_url + image_params
+
+    end
+
     get "/spoiler" do
       filter = add_scope(params)
-      @card_url = get_random_card(filter)
+      @card = get_random_card(filter)
+      @card_url = get_card_url(@card)
+
       haml :spoiler
     end
 
@@ -99,7 +106,8 @@ module SpoilerBot
         filter = add_scope(params)
       end
 
-      @card_url = get_random_card(filter)
+      @card = get_random_card(filter)
+      @card_url = get_card_url(@card)
       begin
 
       rescue => e
