@@ -19,6 +19,9 @@ module SpoilerBot
     
     #http://gatherer.wizards.com/Pages/Search/Default.aspx?page=0&sort=cn+&output=standard&set=["Battle%20for%20Zendikar"]
     configure do
+      hearthstone_json = File.read('lib/gvg.json')
+      @@hearthstone_cards = JSON.parse(hearthstone_json)
+
       set :static_cache_control, [:public, max_age: 60 * 60 * 24 * 365]
       @@cards = []
 
@@ -65,8 +68,7 @@ module SpoilerBot
       cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if (filter[:name] && !filter[:name].empty?)
       card  = cards.sample
 
-      return card
-      
+      return get_card_url(card)
     end
 
     def get_card_image(card)
@@ -100,7 +102,11 @@ module SpoilerBot
       response = Typhoeus.post(url, body: {"channel" => "#general", "text" => text}.to_json)
       render text: '', status: :ok
     end
-
+    
+    def get_random_hearthstone_card_image
+      @@hearthstone_cards["cards"].sample["image_url"]
+    end
+    
     get "/post" do
       post_message
     end    
@@ -116,18 +122,21 @@ module SpoilerBot
     post "/spoiler" do
       if params[:text] && params[:trigger_word]
         input = params[:text].gsub(params[:trigger_word],"").strip
-        filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
-          k,v = s.split(/=/)
-          h[k.to_sym] << v
-          h
+        if input == "hearthstone"
+          @card_url = get_random_hearthstone_card_image
+        else
+          filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
+            k,v = s.split(/=/)
+            h[k.to_sym] << v
+            h
+          end
+          @card_url = get_random_card(filter)
         end
-
       else
         filter = add_scope(params)
+        @card_url = get_random_card(filter)
       end
-
-      @card = get_random_card(filter)
-      @card_url = get_card_url(@card)
+        
       begin
 
       rescue => e
