@@ -52,7 +52,7 @@ module SpoilerBot
         card_table.each {|c| @@cards << Hash[
                 :name => c.css('.cardTitle').text.strip,
                 :rarity => c.css('.setVersions img').attr('src').text.split('rarity=')[-1],
-                :color => c.css('.manaCost img').map{ |i| i['alt']}.drop(1),
+                :color => c.css('.manaCost img').map{ |i| i['alt']}.map{ |i| i.length > 1 ? i : "Colorless",
                 :cmc => c.css('.convertedManaCost').text.strip,
                 :type => c.css('.typeLine').text.strip,
                 :image_url => c.css('.leftCol img').attr('src').text.gsub("../../",""),
