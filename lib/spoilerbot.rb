@@ -68,7 +68,7 @@ module SpoilerBot
       cards = cards.select {|card| card[:type].downcase.include? filter[:type].downcase} if (filter[:type] && !filter[:type].empty?)
       cards = cards.select {|card| card[:rules].include? rules} if (filter[:rules] && !filter[:rules].empty?)
       cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if (filter[:name] && !filter[:name].empty?)
-      cards = cards.select {|card| card[:color].downcase.include? filter[:color].downcase} if (filter[:color] && !filter[:color].empty?)
+      cards = cards.select {|card| card[:color].map(&:downcase).include? filter[:color].downcase} if (filter[:color] && !filter[:color].empty?)
       card  = cards.sample
 
       return get_card_url(card)
