@@ -51,7 +51,9 @@ module SpoilerBot
         card_table = doc.css('.cardItem')
         card_table.each {|c| @@cards << Hash[
                 :name => c.css('.cardTitle').text.strip,
-                :rarity => c.css('.setVersions img').attr('src').text.split('rarity=')[-1],:cmc => c.css('.convertedManaCost').text.strip,
+                :rarity => c.css('.setVersions img').attr('src').text.split('rarity=')[-1],
+                :color => c.css('.manaCost img').map{ |i| i['alt']}.drop(1),
+                :cmc => c.css('.convertedManaCost').text.strip,
                 :type => c.css('.typeLine').text.strip,
                 :image_url => c.css('.leftCol img').attr('src').text.gsub("../../",""),
                 :rules => c.css('.rulesText p').map(&:text).join("\n")
@@ -66,6 +68,7 @@ module SpoilerBot
       cards = cards.select {|card| card[:type].downcase.include? filter[:type].downcase} if (filter[:type] && !filter[:type].empty?)
       cards = cards.select {|card| card[:rules].include? rules} if (filter[:rules] && !filter[:rules].empty?)
       cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if (filter[:name] && !filter[:name].empty?)
+      cards = cards.select {|card| card[:color].downcase.include? filter[:color].downcase} if (filter[:color] && !filter[:color].empty?)
       card  = cards.sample
 
       return get_card_url(card)
