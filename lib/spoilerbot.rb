@@ -122,8 +122,11 @@ module SpoilerBot
 
     def get_card_url(card)
       image_params = card[:image_url]
-      base_image_url = "http://gatherer.wizards.com/"
-      return base_image_url + image_params
+      return image_params
+      
+      # Gatherer
+      #base_image_url = "http://gatherer.wizards.com/"
+      #return base_image_url + image_params
     end
 
     def post_message
