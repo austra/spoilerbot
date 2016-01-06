@@ -32,7 +32,6 @@ module SpoilerBot
       #return 401 unless request["token"] == ENV['SLACK_TOKEN']
     end
 
-    mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=169&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
     #http://gatherer.wizards.com/Pages/Search/Default.aspx?page=0&sort=cn+&output=standard&set=["Battle%20for%20Zendikar"]
     configure do
       hearthstone_json = File.read('lib/gvg.json')
@@ -54,18 +53,9 @@ module SpoilerBot
 
       # MtgSalvation
       #
-      doc = Nokogiri::HTML(open(mtgsalvation_url))
-      cards = doc.css('.card-flip-wrapper')
-      cards.each {|c| @@cards << Hash[
-        :name => c.css(".t-spoiler-header .j-search-html").text.strip,
-        :rarity => c.css("img").first.parent.attr('class').split("-").last,
-        :color => get_cost(c.css('.mana-icon').map{|m| m.attr('title')}),
-        :cmc => get_cmc(c.css('.mana-icon').map{|m| m.attr('title')}),
-        :type => c.css('.t-spoiler-type').text.strip,
-        :image_url => c.css('img').last.attr('src'),
-        :rules => c.css('.j-search-val').last.attr("value")
-      ]}
+      mtg_spoiler_load
       
+
       # Gatherer
       #
       # doc = Nokogiri::HTML(open(url))
@@ -94,6 +84,20 @@ module SpoilerBot
     end
     
 
+    def mtg_spoiler_load
+      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=169&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
+      doc = Nokogiri::HTML(open(mtgsalvation_url))
+      cards = doc.css('.card-flip-wrapper')
+      cards.each {|c| @@cards << Hash[
+        :name => c.css(".t-spoiler-header .j-search-html").text.strip,
+        :rarity => c.css("img").first.parent.attr('class').split("-").last,
+        :color => get_cost(c.css('.mana-icon').map{|m| m.attr('title')}),
+        :cmc => get_cmc(c.css('.mana-icon').map{|m| m.attr('title')}),
+        :type => c.css('.t-spoiler-type').text.strip,
+        :image_url => c.css('img').last.attr('src'),
+        :rules => c.css('.j-search-val').last.attr("value")
+      ]}
+    end
     
     def get_random_card(filter)
       cards = @@cards
@@ -164,6 +168,9 @@ module SpoilerBot
         input = params[:text].gsub(params[:trigger_word],"").strip
         if input == "hearthstone"
           @card_url = get_random_hearthstone_card_image
+        elsif  input == "reload"
+          mtg_spoiler_load
+          @card_url = "cards reloaded"
         else
           filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
             k,v = s.split(/=/)
