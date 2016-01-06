@@ -203,6 +203,8 @@ module SpoilerBot
         elsif  input == "reload"
           mtg_spoiler_load
           @card_url = "cards reloaded"
+        elsif input == "count"
+          @card_url = "#{@@cards.count} / 184"
         else
           filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
             k,v = s.split(/=/)
