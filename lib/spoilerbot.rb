@@ -11,12 +11,28 @@ require 'typhoeus'
 
 module SpoilerBot
   class Web < Sinatra::Base
+    
+    def self.get_cost(cost)
+      ccc = []
+      cost.each do |c|
+        ccc << c.split(" ")[1]
+      end
+      return ccc.uniq
+    end
+
+    def self.get_cmc(cost)
+      cmc = []
+      cost.each do |c|
+        cmc << c.split(" ")[0]
+      end
+      return cmc.map(&:to_i).reduce(:+).to_s
+    end
 
     before do
       #return 401 unless request["token"] == ENV['SLACK_TOKEN']
     end
 
-    
+    mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=169&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
     #http://gatherer.wizards.com/Pages/Search/Default.aspx?page=0&sort=cn+&output=standard&set=["Battle%20for%20Zendikar"]
     configure do
       hearthstone_json = File.read('lib/gvg.json')
@@ -36,31 +52,49 @@ module SpoilerBot
       
       url = base_url + url_options + expansion
 
-      doc = Nokogiri::HTML(open(url))
+      # MtgSalvation
+      #
+      doc = Nokogiri::HTML(open(mtgsalvation_url))
+      cards = doc.css('.card-flip-wrapper')
+      cards.each {|c| @@cards << Hash[
+        :name => c.css(".t-spoiler-header .j-search-html").text.strip,
+        :rarity => c.css("img").first.parent.attr('class').split("-").last,
+        :color => get_cost(c.css('.mana-icon').map{|m| m.attr('title')}),
+        :cmc => get_cmc(c.css('.mana-icon').map{|m| m.attr('title')}),
+        :type => c.css('.t-spoiler-type').text.strip,
+        :image_url => c.css('img').last.attr('src'),
+        :rules => c.css('.j-search-val').last.attr("value")
+      ]}
+      
+      # Gatherer
+      #
+      # doc = Nokogiri::HTML(open(url))
+      # paging_control = doc.css('.pagingcontrols a')
+      # paging_control.each do |page|
+      #   pages << page["href"].match(/page=(\d+)/)[1].to_i
+      # end
 
-      paging_control = doc.css('.pagingcontrols a')
-      paging_control.each do |page|
-        pages << page["href"].match(/page=(\d+)/)[1].to_i
-      end
-
-      pages.uniq.count.times do |i|
-        url = "http://gatherer.wizards.com/Pages/Search/Default.aspx?page=" + i.to_s + "&sort=cn+&output=standard" + expansion
-        if i > 0 
-          doc = Nokogiri::HTML(open(url))
-        end
-        card_table = doc.css('.cardItem')
-        card_table.each {|c| @@cards << Hash[
-                :name => c.css('.cardTitle').text.strip,
-                :rarity => c.css('.setVersions img').attr('src').text.split('rarity=')[-1],
-                :color => c.css('.manaCost img').map{ |i| i['alt'] }.map{ |i| i.length > 1 ? i : "Colorless" },
-                :cmc => c.css('.convertedManaCost').text.strip,
-                :type => c.css('.typeLine').text.strip,
-                :image_url => c.css('.leftCol img').attr('src').text.gsub("../../",""),
-                :rules => c.css('.rulesText p').map(&:text).join("\n")
-        ]}
-      end
+      # pages.uniq.count.times do |i|
+      #   url = "http://gatherer.wizards.com/Pages/Search/Default.aspx?page=" + i.to_s + "&sort=cn+&output=standard" + expansion
+      #   if i > 0 
+      #     doc = Nokogiri::HTML(open(url))
+      #   end
+      #   card_table = doc.css('.cardItem')
+      #   card_table.each {|c| @@cards << Hash[
+      #           :name => c.css('.cardTitle').text.strip,
+      #           :rarity => c.css('.setVersions img').attr('src').text.split('rarity=')[-1],
+      #           :color => c.css('.manaCost img').map{ |i| i['alt'] }.map{ |i| i.length > 1 ? i : "Colorless" }, #["Colorless", "Black"]
+      #           :cmc => c.css('.convertedManaCost').text.strip,
+      #           :type => c.css('.typeLine').text.strip,
+      #           :image_url => c.css('.leftCol img').attr('src').text.gsub("../../",""),
+      #           :rules => c.css('.rulesText p').map(&:text).join("\n")
+      #   ]}
+      # end
+      
     end
+    
 
+    
     def get_random_card(filter)
       cards = @@cards
       cards = cards.select {|card| card[:rarity].downcase == filter[:rarity].downcase} if (filter[:rarity] && !filter[:rarity].empty?)
