@@ -13,11 +13,15 @@ module SpoilerBot
   class Web < Sinatra::Base
     
     ### NEEDS CLEANUP -- DUPLICATED
-    def self.get_cost(cost)
+    def self.get_cost(type, cost)
       ccc = []
-      cost.each do |c|
-        ccc << c.split(" ")[1]
-      end
+      if type.downcase.include? "land"
+        ccc << "land"
+      else 
+        cost.each do |c|
+          ccc << c.split(" ")[1]
+        end
+      end  
       return ccc.uniq
     end
 
@@ -36,8 +40,8 @@ module SpoilerBot
       cards.each {|c| @@cards << Hash[
         :name => c.css(".t-spoiler-header .j-search-html").text.strip,
         :rarity => c.css("img").first.parent.attr('class').split("-").last,
-        :color => get_cost(c.css('.mana-icon').map{|m| m.attr('title')}),
-        :cmc => get_cmc(c.css('.mana-icon').map{|m| m.attr('title')}),
+        :color => get_cost(c.css('.t-spoiler-type').text.strip, c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
+        :cmc => get_cmc(c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
         :type => c.css('.t-spoiler-type').text.strip,
         :image_url => c.css('img').last.attr('src'),
         :rules => c.css('.j-search-val').last.attr("value")
@@ -107,19 +111,23 @@ module SpoilerBot
       cards.each {|c| @@cards << Hash[
         :name => c.css(".t-spoiler-header .j-search-html").text.strip,
         :rarity => c.css("img").first.parent.attr('class').split("-").last,
-        :color => get_cost(c.css('.mana-icon').map{|m| m.attr('title')}),
-        :cmc => get_cmc(c.css('.mana-icon').map{|m| m.attr('title')}),
+        :color => get_cost(c.css('.t-spoiler-type').text.strip, c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
+        :cmc => get_cmc(c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
         :type => c.css('.t-spoiler-type').text.strip,
         :image_url => c.css('img').last.attr('src'),
         :rules => c.css('.j-search-val').last.attr("value")
       ]}
     end
 
-    def get_cost(cost)
+    def get_cost(type, cost)
       ccc = []
-      cost.each do |c|
-        ccc << c.split(" ")[1]
-      end
+      if type.downcase.include? "land"
+        ccc << "land"
+      else 
+        cost.each do |c|
+          ccc << c.split(" ")[1]
+        end
+      end  
       return ccc.uniq
     end
 
@@ -136,7 +144,7 @@ module SpoilerBot
       cards = cards.select {|card| card[:rarity].downcase == filter[:rarity].downcase} if (filter[:rarity] && !filter[:rarity].empty?)
       cards = cards.select {|card| card[:cmc] == filter[:cmc]} if (filter[:cmc] &&! filter[:cmc].empty?)
       cards = cards.select {|card| card[:type].downcase.include? filter[:type].downcase} if (filter[:type] && !filter[:type].empty?)
-      cards = cards.select {|card| card[:rules].include? rules} if (filter[:rules] && !filter[:rules].empty?)
+      cards = cards.select {|card| card[:rules].downcase.include? filter[:rules]} if (filter[:rules] && !filter[:rules].empty?)
       cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if (filter[:name] && !filter[:name].empty?)
       cards = cards.select {|card| card[:color].map(&:downcase).include? filter[:color].downcase} if (filter[:color] && !filter[:color].empty?)
       card  = cards.sample
