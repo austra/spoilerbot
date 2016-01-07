@@ -25,7 +25,7 @@ module SpoilerBot
         colors = colors - ["Colorless"]
         
         #add back in actual colorless
-        if cost.map{|c| c.attr('class')}.include? "generic"
+        if cost.map{|c| c.attr('class')}.join(",").include? "generic"
           colors << "Colorless"
         end
 
