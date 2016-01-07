@@ -12,17 +12,25 @@ require 'typhoeus'
 module SpoilerBot
   class Web < Sinatra::Base
     
-    ### NEEDS CLEANUP -- DUPLICATED
-    def self.get_cost(type, cost)
-      ccc = []
+    def self.get_color(type, cost)
+      colors = []
       if type.downcase.include? "land"
-        ccc << "land"
+        colors << "land"
       else 
-        cost.each do |c|
-          ccc << c.split(" ")[1]
+        cost.map{|m| m.attr('title')}.each do |c|
+          colors << c.split(" ")[1]
         end
+
+        #remove generic colorless
+        colors = colors - ["Colorless"]
+        
+        #add back in actual colorless
+        if cost.map{|c| c.attr('class')}.include? "generic"
+          colors << "Colorless"
+        end
+
       end  
-      return ccc.uniq
+      return colors.uniq
     end
 
     def self.get_cmc(cost)
@@ -34,13 +42,14 @@ module SpoilerBot
     end
 
     def self.mtg_spoiler_load
+      @@cards = []
       mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=169&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
       cards = doc.css('.card-flip-wrapper')
       cards.each {|c| @@cards << Hash[
         :name => c.css(".t-spoiler-header .j-search-html").text.strip,
         :rarity => c.css("img").first.parent.attr('class').split("-").last,
-        :color => get_cost(c.css('.t-spoiler-type').text.strip, c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
+        :color => get_color(c.css('.t-spoiler-type').text.strip, c.css('.t-spoiler-mana .mana-icon')),
         :cmc => get_cmc(c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
         :type => c.css('.t-spoiler-type').text.strip,
         :image_url => c.css('img').last.attr('src'),
@@ -58,7 +67,7 @@ module SpoilerBot
       @@hearthstone_cards = JSON.parse(hearthstone_json)
 
       set :static_cache_control, [:public, max_age: 60 * 60 * 24 * 365]
-      @@cards = []
+      
 
       pages = []
 
@@ -101,42 +110,6 @@ module SpoilerBot
       #   ]}
       # end
       
-    end
-    
-    ### NEEDS CLEANUP -- DUPLICATED
-    def mtg_spoiler_load
-      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=169&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
-      doc = Nokogiri::HTML(open(mtgsalvation_url))
-      cards = doc.css('.card-flip-wrapper')
-      cards.each {|c| @@cards << Hash[
-        :name => c.css(".t-spoiler-header .j-search-html").text.strip,
-        :rarity => c.css("img").first.parent.attr('class').split("-").last,
-        :color => get_cost(c.css('.t-spoiler-type').text.strip, c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
-        :cmc => get_cmc(c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
-        :type => c.css('.t-spoiler-type').text.strip,
-        :image_url => c.css('img').last.attr('src'),
-        :rules => c.css('.j-search-val').last.attr("value")
-      ]}
-    end
-
-    def get_cost(type, cost)
-      ccc = []
-      if type.downcase.include? "land"
-        ccc << "land"
-      else 
-        cost.each do |c|
-          ccc << c.split(" ")[1]
-        end
-      end  
-      return ccc.uniq
-    end
-
-    def get_cmc(cost)
-      cmc = []
-      cost.each do |c|
-        cmc << c.split(" ")[0]
-      end
-      return cmc.map(&:to_i).reduce(:+).to_s
     end
     
     def get_random_card(filter)
@@ -209,7 +182,7 @@ module SpoilerBot
         if input == "hearthstone"
           @card_url = get_random_hearthstone_card_image
         elsif  input == "reload"
-          mtg_spoiler_load
+          Web.mtg_spoiler_load
           @card_url = "cards reloaded"
         elsif input == "count"
           @card_url = "#{@@cards.count} / 184"
