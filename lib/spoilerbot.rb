@@ -53,7 +53,7 @@ module SpoilerBot
         :cmc => get_cmc(c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
         :type => c.css('.t-spoiler-type').text.strip,
         :image_url => c.css('img').last.attr('src'),
-        :rules => c.css('.j-search-val').last.attr("value")
+        :rules => c.css('.j-search-val').last.nil? ? "" : c.css('.j-search-val').last.attr("value")
       ]}
     end
 
