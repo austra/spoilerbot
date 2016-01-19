@@ -55,6 +55,7 @@ module SpoilerBot
         :image_url => c.css('img').last.attr('src'),
         :rules => c.css('.j-search-val').last.nil? ? "" : c.css('.j-search-val').last.attr("value")
       ]}
+
     end
 
     before do
@@ -120,9 +121,10 @@ module SpoilerBot
       cards = cards.select {|card| card[:rules].downcase.include? filter[:rules]} if (filter[:rules] && !filter[:rules].empty?)
       cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if (filter[:name] && !filter[:name].empty?)
       cards = cards.select {|card| card[:color].map(&:downcase).include? filter[:color].downcase} if (filter[:color] && !filter[:color].empty?)
+      count = cards.count
       card  = cards.sample
 
-      return get_card_url(card)
+      return get_card_url(card,count)
     end
 
     def get_card_image(card)
@@ -137,9 +139,9 @@ module SpoilerBot
       filter
     end
 
-    def get_card_url(card)
+    def get_card_url(card,count)
       image_params = card[:image_url]
-      return image_params
+      return image_params,count
       
       # Gatherer
       #base_image_url = "http://gatherer.wizards.com/"
@@ -148,7 +150,7 @@ module SpoilerBot
 
     def post_message
       filter = add_scope(params)
-      card = get_random_card(filter)
+      card,count = get_random_card(filter)
       card_url = get_card_url(card)
       links = "<#{@@heroku_url}/post|Random Spoiler>"
       text = "<#{card_url}> #{links}"
@@ -170,7 +172,7 @@ module SpoilerBot
 
     get "/spoiler" do
       filter = add_scope(params)
-      @card = get_random_card(filter)
+      @card,@count = get_random_card(filter)
       @card_url = get_card_url(@card)
 
       haml :spoiler
@@ -192,11 +194,11 @@ module SpoilerBot
             h[k.to_sym] << v
             h
           end
-          @card_url = get_random_card(filter)
+          @card_url,@count = get_random_card(filter)
         end
       else
         filter = add_scope(params)
-        @card_url = get_random_card(filter)
+        @card_url,@count = get_random_card(filter)
       end
         
       begin
@@ -207,7 +209,7 @@ module SpoilerBot
       end
 
       status 200
-      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: @card_url }
+      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: "Matching cards: #{@count}\n#{@card_url}" }
       return reply.to_json
     end
   end
