@@ -43,7 +43,8 @@ module SpoilerBot
 
     def self.mtg_spoiler_load
       @@cards = []
-      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=169&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
+      @@seen_cards = []
+      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=170&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
       cards = doc.css('.card-flip-wrapper')
       cards.each {|c| @@cards << Hash[
