@@ -47,14 +47,16 @@ module SpoilerBot
       mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=170&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
       cards = doc.css('.card-flip-wrapper')
+      binding.pry
       cards.each {|c| @@cards << Hash[
-        :name => c.css(".t-spoiler-header .j-search-html").text.strip,
-        :rarity => c.css("img").first.parent.attr('class').split("-").last,
-        :color => get_color(c.css('.t-spoiler-type').text.strip, c.css('.t-spoiler-mana .mana-icon')),
-        :cmc => get_cmc(c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
-        :type => c.css('.t-spoiler-type').text.strip,
+        :name      => c.css(".t-spoiler-header .j-search-html").text.strip,
+        :rarity    => c.css("img").first.parent.attr('class').split("-").last,
+        :color     => get_color(c.css('.t-spoiler-type').text.strip, c.css('.t-spoiler-mana .mana-icon')),
+        :cmc       => get_cmc(c.css('.t-spoiler-mana .mana-icon').map{|m| m.attr('title')}),
+        :type      => c.css('.t-spoiler-type').text.strip,
         :image_url => c.css('img').last.attr('src'),
-        :rules => c.css('.j-search-val').last.nil? ? "" : c.css('.j-search-val').last.attr("value")
+        :rules     => c.css('.j-search-val').last.nil? ? "" : c.css('.j-search-val').last.attr("value"),
+        :number    => c.css(".t-spoiler-artist").text.strip[/(\d*)\//,1]
       ]}
 
     end
@@ -122,10 +124,12 @@ module SpoilerBot
       cards = cards.select {|card| card[:rules].downcase.include? filter[:rules]} if (filter[:rules] && !filter[:rules].empty?)
       cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if (filter[:name] && !filter[:name].empty?)
       cards = cards.select {|card| card[:color].map(&:downcase).include? filter[:color].downcase} if (filter[:color] && !filter[:color].empty?)
+      cards = cards.select {|card| card[:number]}
       count = cards.count
       card  = cards.sample
-
-      return get_card_url(card,count)
+      #remove random card from cards. increment "viewed" count.
+      #reset on /reload
+      return card, count
     end
 
     def get_card_image(card)
@@ -140,9 +144,9 @@ module SpoilerBot
       filter
     end
 
-    def get_card_url(card,count)
+    def get_card_url(card)
       image_params = card[:image_url]
-      return image_params,count
+      return image_params
       
       # Gatherer
       #base_image_url = "http://gatherer.wizards.com/"
@@ -167,6 +171,10 @@ module SpoilerBot
       @@hearthstone_cards["cards"].sample["image_url"]
     end
     
+    def find_flip_card(card)
+      @@cards.select{|c| c[:number] == card[:number] && c[:name] != card[:name]}.first
+    end
+
     get "/post" do
       post_message
     end    
@@ -195,11 +203,17 @@ module SpoilerBot
             h[k.to_sym] << v
             h
           end
-          @card_url,@count = get_random_card(filter)
+          @card,@count = get_random_card(filter)
+          @card_url = get_card_url(card)
         end
       else
         filter = add_scope(params)
-        @card_url,@count = get_random_card(filter)
+        @card,@count = get_random_card(filter)
+        @card_url = get_card_url(@card)
+        if @card[:rules].downcase.include? "transform"
+          @flip_card = find_flip_card(@card)
+          @flip_card_url = get_card_url(@flip_card)
+        end
       end
         
       begin
@@ -210,7 +224,9 @@ module SpoilerBot
       end
 
       status 200
-      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: "Matching cards: #{@count}\n#{@card_url}" }
+      text = "#{@count}\n#{@card_url}"
+      text += "\n#{@flip_card_url}" if @flip_card
+      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: "Matching cards: #{text}" }
       return reply.to_json
     end
   end
