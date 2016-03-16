@@ -127,7 +127,7 @@ module SpoilerBot
       matching_count = cards.count
       card = cards.sample
       @@cards.delete(card)
-      @@viewed_cards += 1
+      @@viewed_count += 1
       return card, matching_count
     end
 
