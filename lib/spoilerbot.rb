@@ -43,7 +43,7 @@ module SpoilerBot
 
     def self.mtg_spoiler_load
       @@cards = []
-      @@seen_cards = []
+      @@viewed_count = 0
       mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=170&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
       cards = doc.css('.card-flip-wrapper')
@@ -124,11 +124,11 @@ module SpoilerBot
       cards = cards.select {|card| card[:name].downcase.include? filter[:name].downcase} if (filter[:name] && !filter[:name].empty?)
       cards = cards.select {|card| card[:color].map(&:downcase).include? filter[:color].downcase} if (filter[:color] && !filter[:color].empty?)
       cards = cards.select {|card| card[:rules].downcase.include? "transform"} if (filter[:flip] && !filter[:flip].empty?)
-      count = cards.count
-      card  = cards.sample
-      #remove random card from cards. increment "viewed" count.
-      #reset on /reload
-      return card, count
+      matching_count = cards.count
+      card = cards.sample
+      @@cards.delete(card)
+      @@viewed_cards += 1
+      return card, matching_count
     end
 
     def get_card_image(card)
@@ -203,7 +203,7 @@ module SpoilerBot
             h
           end
           #clean this up
-          @card,@count = get_random_card(filter)
+          @card,@matching_count = get_random_card(filter)
           @card_url = get_card_url(@card)
           if @card[:rules].downcase.include? "transform"
           @flip_card = find_flip_card(@card)
@@ -212,7 +212,7 @@ module SpoilerBot
         end
       else
         filter = add_scope(params)
-        @card,@count = get_random_card(filter)
+        @card,@matching_count = get_random_card(filter)
         @card_url = get_card_url(@card)
         if @card[:rules].downcase.include? "transform"
           @flip_card = find_flip_card(@card)
@@ -228,9 +228,9 @@ module SpoilerBot
       end
 
       status 200
-      text = "#{@count}\n#{@card_url}"
+      text = "#{@matching_count}\n#{@card_url}"
       text += "\n#{@flip_card_url}" if @flip_card
-      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: "Matching cards: #{text}" }
+      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: "Unseen: #{@@cards.count}, Viewed: #{@@viewed_count}, Matching cards: #{text}" }
       return reply.to_json
     end
   end
