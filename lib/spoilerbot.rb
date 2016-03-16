@@ -47,7 +47,6 @@ module SpoilerBot
       mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=170&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
       cards = doc.css('.card-flip-wrapper')
-      binding.pry
       cards.each {|c| @@cards << Hash[
         :name      => c.css(".t-spoiler-header .j-search-html").text.strip,
         :rarity    => c.css("img").first.parent.attr('class').split("-").last,
@@ -203,8 +202,13 @@ module SpoilerBot
             h[k.to_sym] << v
             h
           end
+          #clean this up
           @card,@count = get_random_card(filter)
-          @card_url = get_card_url(card)
+          @card_url = get_card_url(@card)
+          if @card[:rules].downcase.include? "transform"
+          @flip_card = find_flip_card(@card)
+          @flip_card_url = get_card_url(@flip_card)
+        end
         end
       else
         filter = add_scope(params)
