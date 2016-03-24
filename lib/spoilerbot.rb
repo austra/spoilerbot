@@ -127,6 +127,7 @@ module SpoilerBot
       matching_count = cards.count
       card = cards.sample
       @@cards.delete(card)
+      ENV['VIEWED'] = ENV['VIEWED'] + " " + card[:number]
       @@viewed_count += 1
       return card, matching_count
     end
