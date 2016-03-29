@@ -8,6 +8,7 @@ require 'json'
 require 'pry'
 require 'yaml'
 require 'typhoeus'
+require 'csv'
 
 module SpoilerBot
   class Web < Sinatra::Base
@@ -42,8 +43,9 @@ module SpoilerBot
     end
 
     def self.mtg_spoiler_load
+      @@viewed_cards = CSV.read('public/viewed').flatten
+      @@viewed_count = @@viewed_cards.count
       @@cards = []
-      @@viewed_count = 0
       mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=170&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
       cards = doc.css('.card-flip-wrapper')
@@ -57,7 +59,7 @@ module SpoilerBot
         :rules     => c.css('.j-search-val').last.nil? ? "" : c.css('.j-search-val').last.attr("value"),
         :number    => c.css(".t-spoiler-artist").text.strip[/(\d*)\//,1]
       ]}
-
+      @@cards = @@cards.select{|c| !@@viewed_cards.include? c[:number]}
     end
 
     before do
@@ -86,6 +88,7 @@ module SpoilerBot
       # MtgSalvation
       #
       mtg_spoiler_load
+
       
 
       # Gatherer
@@ -126,9 +129,22 @@ module SpoilerBot
       cards = cards.select {|card| card[:rules].downcase.include? "transform"} if (filter[:flip] && !filter[:flip].empty?)
       matching_count = cards.count
       card = cards.sample
+      
+      CSV.open("public/viewed", "a") do |csv|
+        csv << [card[:number]]
+      end
+
       @@cards.delete(card)
-      @@viewed_count += 1
+
+      # this can be optimized i'm sure
+      @@viewed_count = CSV.read('public/viewed').flatten.count
       return card, matching_count
+    end
+
+    def reset_viewed
+      CSV.open("public/viewed", "w") do |csv|
+        csv << []
+      end
     end
 
     def get_card_image(card)
@@ -191,7 +207,10 @@ module SpoilerBot
         input = params[:text].gsub(params[:trigger_word],"").strip
         if input == "hearthstone"
           @card_url = get_random_hearthstone_card_image
-        elsif  input == "reload"
+        elsif input == "reset"
+          reset_viewed
+          @card_url = "reset viewed cards"
+        elsif input == "reload"
           Web.mtg_spoiler_load
           @card_url = "cards reloaded"
         elsif input == "count"
