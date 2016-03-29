@@ -145,6 +145,7 @@ module SpoilerBot
       CSV.open("public/viewed", "w") do |csv|
         csv << []
       end
+      @@viewed_count = 0
     end
 
     def get_card_image(card)
