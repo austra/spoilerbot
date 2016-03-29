@@ -9,10 +9,18 @@ require 'pry'
 require 'yaml'
 require 'typhoeus'
 require 'csv'
+require 'twitter'
 
 module SpoilerBot
   class Web < Sinatra::Base
-    
+
+    @@twitter_client = Twitter::REST::Client.new do |client|
+      client.consumer_key        = ENV['CONSUMER_KEY']
+      client.consumer_secret     = ENV['CONSUMER_SECRET']
+      client.access_token        = ENV['ACCESS_TOKEN']
+      client.access_token_secret = ENV['ACCESS_TOKEN_SECRET']
+    end
+
     def self.get_color(type, cost)
       colors = []
       if type.downcase.include? "land"
@@ -191,6 +199,11 @@ module SpoilerBot
       @@cards.select{|c| c[:number] == card[:number] && c[:name] != card[:name]}.first
     end
 
+    def twitter
+      #@@twitter_client.home_timeline.map(&:attrs)
+      @@twitter_client.home_timeline.take(5).map(&:text).join("/n")
+    end
+
     get "/post" do
       post_message
     end    
@@ -202,12 +215,14 @@ module SpoilerBot
 
       haml :spoiler
     end
-
+    
     post "/spoiler" do
       if params[:text] && params[:trigger_word]
         input = params[:text].gsub(params[:trigger_word],"").strip
         if input == "hearthstone"
           @card_url = get_random_hearthstone_card_image
+        elsif input == "twitter"
+          @twitter = twitter
         elsif input == "reset"
           reset_viewed
           @card_url = "reset viewed cards"
@@ -250,7 +265,12 @@ module SpoilerBot
       status 200
       text = "#{@matching_count}\n#{@card_url}"
       text += "\n#{@flip_card_url}" if @flip_card
-      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: "Unseen: #{@@cards.count}, Viewed: #{@@viewed_count}, Matching cards: #{text}" }
+      if @twitter
+        str = @twitter
+      else 
+        str = "Unseen: #{@@cards.count}, Viewed: #{@@viewed_count}, Matching cards: #{text}"
+      end
+      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: str }
       return reply.to_json
     end
   end
