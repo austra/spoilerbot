@@ -51,6 +51,10 @@ module SpoilerBot
     end
 
     def self.mtg_spoiler_load
+      # For MTG Salvation, read in and parse spoiler list
+      # should probably just use a db and store this stuff....  
+      # Otherwise tracking state of viewed cards relies on implementing twitter to store viewed cards
+      # or something, which sounds fun anyway, so who needs a db...
       @@viewed_cards = CSV.read('public/viewed').flatten
       @@viewed_count = @@viewed_cards.count
       @@cards = []
@@ -74,7 +78,9 @@ module SpoilerBot
       #return 401 unless request["token"] == ENV['SLACK_TOKEN']
     end
 
+    #sample Gatherer request
     #http://gatherer.wizards.com/Pages/Search/Default.aspx?page=0&sort=cn+&output=standard&set=["Battle%20for%20Zendikar"]
+    
     configure do
       hearthstone_json = File.read('lib/gvg.json')
       @@hearthstone_cards = JSON.parse(hearthstone_json)
@@ -89,17 +95,17 @@ module SpoilerBot
 
       base_url = "http://gatherer.wizards.com/Pages/Search/Default.aspx"
       url_options = "?page=0&sort=cn+&output=standard"
+      
+      # Gatherer Image Url
       #image_url = "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=card_id&type=card"
       
       url = base_url + url_options + expansion
 
-      # MtgSalvation
+      # For Using MtgSalvation
       #
       mtg_spoiler_load
 
-      
-
-      # Gatherer
+      # For Using Gatherer
       #
       # doc = Nokogiri::HTML(open(url))
       # paging_control = doc.css('.pagingcontrols a')
@@ -138,6 +144,7 @@ module SpoilerBot
       matching_count = cards.count
       card = cards.sample
       
+      #need to use twitter 
       CSV.open("public/viewed", "a") do |csv|
         csv << [card[:number]]
       end
@@ -150,6 +157,7 @@ module SpoilerBot
     end
 
     def reset_viewed
+      # need to change to use twitter to store state
       CSV.open("public/viewed", "w") do |csv|
         csv << []
       end
@@ -184,7 +192,6 @@ module SpoilerBot
       links = "<#{@@heroku_url}/post|Random Spoiler>"
       text = "<#{card_url}> #{links}"
 
-
       url = "https://hooks.slack.com/services/####/######/########"
 
       response = Typhoeus.post(url, body: {"channel" => "#general", "text" => text}.to_json)
@@ -200,6 +207,9 @@ module SpoilerBot
     end
 
     def twitter
+      # will eventually write viewed cards to a tweet, then read them back in
+      # to keep state on free heroku
+      
       #@@twitter_client.home_timeline.map(&:attrs)
       @@twitter_client.home_timeline.take(5).map(&:text).join("/n")
     end
@@ -217,60 +227,63 @@ module SpoilerBot
     end
     
     post "/spoiler" do
+      # from slack
       if params[:text] && params[:trigger_word]
         input = params[:text].gsub(params[:trigger_word],"").strip
-        if input == "hearthstone"
-          @card_url = get_random_hearthstone_card_image
-        elsif input == "twitter"
-          @twitter = twitter
-        elsif input == "reset"
+        
+        @output = case input
+        when "hearthstone"
+          get_random_hearthstone_card_image
+        when "twitter"
+          twitter
+        when "reset"
           reset_viewed
-          @card_url = "reset viewed cards"
-        elsif input == "reload"
+          "reset viewed cards"
+        when "reload"
           Web.mtg_spoiler_load
-          @card_url = "cards reloaded"
-        elsif input == "count"
-          @card_url = "#{@@cards.count} / 184"
+          "cards reloaded"
+        when "count"
+          "#{@@cards.count} / 184"
         else
-          filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
+          @filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
             k,v = s.split(/=/)
             h[k.to_sym] << v
             h
           end
-          #clean this up
-          @card,@matching_count = get_random_card(filter)
-          @card_url = get_card_url(@card)
-          if @card[:rules].downcase.include? "transform"
-          @flip_card = find_flip_card(@card)
-          @flip_card_url = get_card_url(@flip_card)
         end
-        end
+
+      # straight to heroku
       else
-        filter = add_scope(params)
-        @card,@matching_count = get_random_card(filter)
-        @card_url = get_card_url(@card)
+        @filter = add_scope(params)
+      end
+      
+      if @filter
+        @card,@matching_count = get_random_card(@filter)
+        @output = get_card_url(@card)
+        
+        # see if the card has a flip
         if @card[:rules].downcase.include? "transform"
           @flip_card = find_flip_card(@card)
           @flip_card_url = get_card_url(@flip_card)
         end
       end
-        
-      begin
-
-      rescue => e
-        p e.message
-        halt
-      end
 
       status 200
-      text = "#{@matching_count}\n#{@card_url}"
+      
+      text = ""
+      text += "Unseen: #{@@cards.count}, Viewed: #{@@viewed_count} " if @filter
+      text += "Matching cards: #{@matching_count}\n" if @matching_count
+      text += "#{@output}"
       text += "\n#{@flip_card_url}" if @flip_card
+      
+      # twitter test output
       if @twitter
-        str = @twitter
+        slack_string = @twitter
       else 
-        str = "Unseen: #{@@cards.count}, Viewed: #{@@viewed_count}, Matching cards: #{text}"
+        slack_string = "#{text}"
       end
-      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: str }
+      
+      reply = { username: 'spoilerbot', icon_emoji: ':alien:', text: slack_string }
       return reply.to_json
     end
   end
