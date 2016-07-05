@@ -58,7 +58,7 @@ module SpoilerBot
       @@viewed_cards = CSV.read('public/viewed').flatten
       @@viewed_count = @@viewed_cards.count
       @@cards = []
-      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=170&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
+      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=172&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
       cards = doc.css('.card-flip-wrapper')
       cards.each {|c| @@cards << Hash[
