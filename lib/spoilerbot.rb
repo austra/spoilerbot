@@ -10,6 +10,9 @@ require 'yaml'
 require 'typhoeus'
 require 'csv'
 require 'twitter'
+require 'dotenv'
+
+Dotenv.load
 
 module SpoilerBot
   class Web < Sinatra::Base
@@ -19,6 +22,30 @@ module SpoilerBot
       client.consumer_secret     = ENV['CONSUMER_SECRET']
       client.access_token        = ENV['ACCESS_TOKEN']
       client.access_token_secret = ENV['ACCESS_TOKEN_SECRET']
+    end
+
+    def self.get_gist
+      #0dd60b11cc9d3da9fdb7e6e19e3540f8
+      #ENV["GIST"]
+      request = Typhoeus::Request.new(
+        "https://api.github.com/gists/0dd60b11cc9d3da9fdb7e6e19e3540f8",
+        method: :get,
+        headers: { Authorization: "token #{ENV['GIT_TOKEN']}" }
+      )
+      response = request.run 
+      body = JSON.parse(response.body)
+      body["files"]["gistfile1.txt"]["content"]
+    end
+
+    def self.edit_gist content
+      request = Typhoeus::Request.new(
+        "https://api.github.com/gists/0dd60b11cc9d3da9fdb7e6e19e3540f8",
+        method: :patch,
+        headers: { Authorization: "token #{ENV['GIT_TOKEN']}" },
+        body: {"files" => { "gistfile1.txt" => { "content" => content }}}.to_json
+      )
+
+      response = request.run 
     end
 
     def self.get_color(type, cost)
@@ -55,8 +82,10 @@ module SpoilerBot
       # should probably just use a db and store this stuff....  
       # Otherwise tracking state of viewed cards relies on implementing twitter to store viewed cards
       # or something, which sounds fun anyway, so who needs a db...
-      @@viewed_cards = CSV.read('public/viewed').flatten
+      viewed_cards = get_gist
+      @@viewed_cards = viewed_cards.split(",")
       @@viewed_count = @@viewed_cards.count
+
       @@cards = []
       mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=172&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
@@ -132,6 +161,8 @@ module SpoilerBot
       
     end
     
+    
+    
     def get_random_card(filter)
       cards = @@cards
       cards = cards.select {|card| card[:rarity].downcase == filter[:rarity].downcase} if (filter[:rarity] && !filter[:rarity].empty?)
@@ -144,23 +175,24 @@ module SpoilerBot
       matching_count = cards.count
       card = cards.sample
       
-      #need to use twitter 
-      CSV.open("public/viewed", "a") do |csv|
-        csv << [card[:number]]
-      end
+      #store this to gist
+      viewed_cards = @@viewed_cards
+      viewed_cards = viewed_cards.join(",")
+      viewed_cards << card[:number]
+      viewed_cards = viewed_cards.split(",")
+      @@viewed_cards << viewed_cards
+      @@viewed_count = viewed_cards.count
+      
+      SpoilerBot::Web.edit_gist(viewed_cards.join(","))
 
       @@cards.delete(card)
 
-      # this can be optimized i'm sure
-      @@viewed_count = CSV.read('public/viewed').flatten.count
       return card, matching_count
     end
 
     def reset_viewed
-      # need to change to use twitter to store state
-      CSV.open("public/viewed", "w") do |csv|
-        csv << []
-      end
+      # reset gist
+      edit_gist("")
       @@viewed_count = 0
     end
 
@@ -243,7 +275,7 @@ module SpoilerBot
           Web.mtg_spoiler_load
           "cards reloaded"
         when "count"
-          "#{@@cards.count} / 184"
+          "#{@@cards.count} / 205"
         else
           @filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
             k,v = s.split(/=/)
