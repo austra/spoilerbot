@@ -270,10 +270,9 @@ module SpoilerBot
 
       status 200
       
-      text = "```"
+      text = ""
       text += "Unseen: #{@@cards.count}, Viewed: #{@@viewed_count} " if @filter
       text += "Matching cards: #{@matching_count}\n" if @matching_count
-      text += "```"
       text += "#{@output}"
       text += "\n#{@flip_card_url}" if @flip_card
 
