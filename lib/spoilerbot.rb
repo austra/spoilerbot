@@ -28,7 +28,7 @@ module SpoilerBot
       response = request.run 
       binding.pry
       body = JSON.parse(response.body)
-      body["files"]["gistfile1.txt"]["content"]
+      body["files"]["spoilerbot"]["content"]
     end
 
     def self.edit_gist content
@@ -36,7 +36,7 @@ module SpoilerBot
         "https://api.github.com/gists/0dd60b11cc9d3da9fdb7e6e19e3540f8",
         method: :patch,
         headers: { Authorization: "token #{ENV['GIT_TOKEN']}" },
-        body: {"files" => { "gistfile1.txt" => { "content" => content }}}.to_json
+        body: {"files" => { "spoilerbot" => { "content" => content }}}.to_json
       )
 
       response = request.run 
@@ -170,14 +170,10 @@ module SpoilerBot
       card = cards.sample
       
       #store this to gist
-      viewed_cards = @@viewed_cards
-      viewed_cards = viewed_cards.join(",")
-      viewed_cards << card[:number]
-      viewed_cards = viewed_cards.split(",")
-      @@viewed_cards << viewed_cards
-      @@viewed_count = viewed_cards.count
+      @@viewed_cards << card[:number]
+      @@viewed_count = @@viewed_cards.count
       
-      SpoilerBot::Web.edit_gist(viewed_cards.join(","))
+      SpoilerBot::Web.edit_gist(@@viewed_cards.join(","))
 
       @@cards.delete(card)
 
@@ -186,8 +182,9 @@ module SpoilerBot
 
     def reset_viewed
       # reset gist
-      edit_gist("")
+      SpoilerBot::Web.edit_gist("")
       @@viewed_count = 0
+      @@viewed_cards = []
     end
 
     def get_card_image(card)
