@@ -17,13 +17,6 @@ Dotenv.load
 module SpoilerBot
   class Web < Sinatra::Base
 
-    @@twitter_client = Twitter::REST::Client.new do |client|
-      client.consumer_key        = ENV['CONSUMER_KEY']
-      client.consumer_secret     = ENV['CONSUMER_SECRET']
-      client.access_token        = ENV['ACCESS_TOKEN']
-      client.access_token_secret = ENV['ACCESS_TOKEN_SECRET']
-    end
-
     def self.get_gist
       #0dd60b11cc9d3da9fdb7e6e19e3540f8
       #ENV["GIST"]
@@ -33,6 +26,7 @@ module SpoilerBot
         headers: { Authorization: "token #{ENV['GIT_TOKEN']}" }
       )
       response = request.run 
+      binding.pry
       body = JSON.parse(response.body)
       body["files"]["gistfile1.txt"]["content"]
     end
@@ -294,10 +288,9 @@ module SpoilerBot
         @output = get_card_url(@card)
         
         # see if the card has a flip
-        if @card[:rules].downcase.include? "transform"
-          @flip_card = find_flip_card(@card)
-          @flip_card_url = get_card_url(@flip_card)
-        end
+        @flip_card = find_flip_card(@card)
+        @flip_card_url = get_card_url(@flip_card) if @flip_card
+        
       end
 
       status 200
