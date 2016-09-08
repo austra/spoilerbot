@@ -26,7 +26,6 @@ module SpoilerBot
         headers: { Authorization: "token #{ENV['GIT_TOKEN']}" }
       )
       response = request.run 
-      binding.pry
       body = JSON.parse(response.body)
       body["files"]["spoilerbot"]["content"]
     end
