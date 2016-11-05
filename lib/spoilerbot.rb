@@ -244,7 +244,7 @@ module SpoilerBot
       }
       res = JSON.parse(res.body)
       song = res["subsonic-response"]["randomSongs"]["song"].first
-      song_description = "#{song["artist"].gsub!(/[^0-9A-Za-z]/, '')} - #{song["title"].gsub!(/[^0-9A-Za-z]/, '')}"
+      song_description = "#{song["artist"].gsub!(/[^0-9A-Za-z]/, '')}-#{song["title"].gsub!(/[^0-9A-Za-z]/, '')}"
       cover_art = song["coverArt"]
       
       location = "http://ausomator.mynetgear.com:4040/rest/createShare.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&id=#{song["id"]}&description=#{song_description}"
