@@ -11,6 +11,10 @@ require 'typhoeus'
 require 'csv'
 require 'twitter'
 require 'dotenv'
+require 'json'
+require 'net/http'
+require 'uri'
+require 'digest'
 
 Dotenv.load
 
@@ -224,6 +228,47 @@ module SpoilerBot
       @@hearthstone_cards["cards"].sample["image_url"]
     end
     
+    def get_random_song
+      version = "#{ENV['VERSION']}"
+      client = "#{ENV['CLIENT']}"
+      username = "#{ENV['USERNAME']}"
+      password = "#{ENV['PASSWORD']}"
+      salt = "#{ENV['SALT']}"
+      token = Digest::MD5.hexdigest(password + salt)
+
+      location = "http://ausomator.mynetgear.com:4040/rest/getRandomSongs.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&size=1"
+      url = URI.parse(location)
+      req = Net::HTTP::Get.new(url.to_s)
+      res = Net::HTTP.start(url.host, url.port) {|http|
+        http.request(req)
+      }
+      res = JSON.parse(res.body)
+      song = res["subsonic-response"]["randomSongs"]["song"].first
+      song_description = "#{song["artist"]} #{song["title"]}"
+      cover_art = song["coverArt"]
+      
+      location = "http://ausomator.mynetgear.com:4040/rest/createShare.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&id=#{song["id"]}&description=#{song_description}"
+      url = URI.parse(location)
+      req = Net::HTTP::Get.new(url.to_s)
+      res = Net::HTTP.start(url.host, url.port) {|http|
+        http.request(req)
+      }
+      res = JSON.parse(res.body)
+      share = res["subsonic-response"]["shares"]["share"].first
+      share_url = share["url"]
+
+      # location = "http://ausomator.mynetgear.com:4040/rest/getCoverArt.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&id=#{song["id"]}"
+      # url = URI.parse(location)
+      # req = Net::HTTP::Get.new(url.to_s)
+      # res = Net::HTTP.start(url.host, url.port) {|http|
+      #   http.request(req)
+      # }
+      # cover = res.body
+
+      share_url
+
+    end
+
     def find_flip_card(card)
       @@cards.select{|c| c[:number] == card[:number] && c[:name] != card[:name]}.first
     end
@@ -256,6 +301,8 @@ module SpoilerBot
         @output = case input
         when "hearthstone"
           get_random_hearthstone_card_image
+        when "song"
+          slack_string = get_random_song
         when "twitter"
           twitter
         when "reset"
