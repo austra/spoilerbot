@@ -265,7 +265,7 @@ module SpoilerBot
       # }
       # cover = res.body
 
-      "#{song["artist"]} - #{song["title"]}\nshare_url"
+      "#{song["artist"]} - #{song["title"]}\n#{share_url}"
 
     end
 
