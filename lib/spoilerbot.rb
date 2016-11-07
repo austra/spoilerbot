@@ -228,6 +228,10 @@ module SpoilerBot
       @@hearthstone_cards["cards"].sample["image_url"]
     end
     
+    def get_random_album
+      
+    end
+
     def get_random_song
       version = "#{ENV['VERSION']}"
       client = "#{ENV['CLIENT']}"
@@ -236,7 +240,7 @@ module SpoilerBot
       salt = "#{ENV['SALT']}"
       token = Digest::MD5.hexdigest(password + salt)
 
-      location = "http://ausomator.mynetgear.com:4040/rest/getRandomSongs.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&size=1"
+      location = "#{ENV["SUBSONIC_SERVER"]}/rest/getRandomSongs.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&size=1"
       url = URI.parse(location)
       req = Net::HTTP::Get.new(url.to_s)
       res = Net::HTTP.start(url.host, url.port) {|http|
@@ -247,7 +251,7 @@ module SpoilerBot
       song_description = "#{song["artist"].gsub!(/[^0-9A-Za-z]/, '')}-#{song["title"].gsub!(/[^0-9A-Za-z]/, '')}"
       cover_art = song["coverArt"]
       
-      location = "http://ausomator.mynetgear.com:4040/rest/createShare.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&id=#{song["id"]}&description=#{song_description}"
+      location = "#{ENV["SUBSONIC_SERVER"]}/rest/createShare.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&id=#{song["id"]}&description=#{song_description}"
       url = URI.parse(location)
       req = Net::HTTP::Get.new(url.to_s)
       res = Net::HTTP.start(url.host, url.port) {|http|
@@ -256,14 +260,6 @@ module SpoilerBot
       res = JSON.parse(res.body)
       share = res["subsonic-response"]["shares"]["share"].first
       share_url = share["url"]
-
-      # location = "http://ausomator.mynetgear.com:4040/rest/getCoverArt.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&id=#{song["id"]}"
-      # url = URI.parse(location)
-      # req = Net::HTTP::Get.new(url.to_s)
-      # res = Net::HTTP.start(url.host, url.port) {|http|
-      #   http.request(req)
-      # }
-      # cover = res.body
 
       "#{song["artist"]} - #{song["title"]}\n#{share_url}"
 
