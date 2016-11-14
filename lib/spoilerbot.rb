@@ -227,10 +227,6 @@ module SpoilerBot
     def get_random_hearthstone_card_image
       @@hearthstone_cards["cards"].sample["image_url"]
     end
-    
-    def get_random_album
-      
-    end
 
     def get_random_song
       version = "#{ENV['VERSION']}"
@@ -248,7 +244,7 @@ module SpoilerBot
       }
       res = JSON.parse(res.body)
       song = res["subsonic-response"]["randomSongs"]["song"].first
-      song_description = "#{song["artist"].gsub!(/[^0-9A-Za-z]/, '')}-#{song["title"].gsub!(/[^0-9A-Za-z]/, '')}"
+      song_description = "#{song["artist"].gsub(/[^0-9A-Za-z]/, '')}-#{song["title"].gsub(/[^0-9A-Za-z]/, '')}"
       cover_art = song["coverArt"]
       
       location = "#{ENV["SUBSONIC_SERVER"]}/rest/createShare.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&id=#{song["id"]}&description=#{song_description}"
@@ -263,6 +259,54 @@ module SpoilerBot
 
       "#{song["artist"]} - #{song["title"]}\n#{share_url}"
 
+    end
+
+    def get_random_album
+      version = "#{ENV['VERSION']}"
+      client = "#{ENV['CLIENT']}"
+      username = "#{ENV['USERNAME']}"
+      password = "#{ENV['PASSWORD']}"
+      salt = "#{ENV['SALT']}"
+      token = Digest::MD5.hexdigest(password + salt)
+
+      location = "#{ENV["SUBSONIC_SERVER"]}/rest/getAlbumList.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&size=1&type=random"
+      url = URI.parse(location)
+      req = Net::HTTP::Get.new(url.to_s)
+      res = Net::HTTP.start(url.host, url.port) {|http|
+        http.request(req)
+      }
+      res = JSON.parse(res.body)
+
+      album = res["subsonic-response"]["albumList"]["album"].first
+      album_description = "#{album["artist"].gsub(/[^0-9A-Za-z]/, '')}-#{album["title"].gsub(/[^0-9A-Za-z]/, '')}"
+
+      location = "#{ENV["SUBSONIC_SERVER"]}/rest/createShare.view?u=#{username}&t=#{token}&s=#{salt}&v=#{version}&c=#{client}&f=json&id=#{album["id"]}&description=#{album_description}"
+      url = URI.parse(location)
+      req = Net::HTTP::Get.new(url.to_s)
+      res = Net::HTTP.start(url.host, url.port) {|http|
+        http.request(req)
+      }
+      res = JSON.parse(res.body)
+      share = res["subsonic-response"]["shares"]["share"].first
+      share_url = share["url"]
+
+      "#{album["artist"]} - #{album["title"]}\n#{share_url}"
+    end
+
+    def get_nba_scores
+      location = "http://www.espn.com/nba/bottomline/scores"
+      response = Typhoeus.get(location)
+      res = Rack::Utils.parse_nested_query response.body
+      count = res["nba_s_count"].to_i
+      msg = ""
+      count.times do |c|
+        msg << res["nba_s_left#{c}"]
+        top_keys = res.keys.select{|k| k =~ /nba_s_right#{c}_\d/}
+        top_keys.each do |k|
+          msg << "\n#{res[k]}"
+        end
+        msg << "\n\n"
+      end
     end
 
     def find_flip_card(card)
@@ -299,6 +343,10 @@ module SpoilerBot
           get_random_hearthstone_card_image
         when "song"
           slack_string = get_random_song
+        when "album"
+          slack_string = get_random_album
+        when "scores"
+          get_nba_scores
         when "twitter"
           twitter
         when "reset"
