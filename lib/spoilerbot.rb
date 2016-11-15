@@ -305,7 +305,7 @@ module SpoilerBot
         msg << "#{event.away_team.full_name} #{event.away_points_scored}\n"
         msg << "------------------------------------\n"
       end
-
+      msg
     end
 
     def find_flip_card(card)
