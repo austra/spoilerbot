@@ -15,6 +15,7 @@ require 'json'
 require 'net/http'
 require 'uri'
 require 'digest'
+require 'xmlstats'
 
 Dotenv.load
 
@@ -294,19 +295,17 @@ module SpoilerBot
     end
 
     def get_nba_scores
-      location = "http://www.espn.com/nba/bottomline/scores"
-      response = Typhoeus.get(location)
-      res = Rack::Utils.parse_nested_query response.body
-      count = res["nba_s_count"].to_i
+      date = (Time.now - 24*60*60).strftime("%Y-%m-%d")
+      Xmlstats.api_key = "#{ENV['XMLSTATS_TOKEN']}"
+      Xmlstats.contact_info = "#{ENV['XMLSTATS_CONTACT']}"
+      events = Xmlstats.events(Date.parse(date), :nba)
       msg = ""
-      count.times do |c|
-        msg << res["nba_s_left#{c}"]
-        top_keys = res.keys.select{|k| k =~ /nba_s_right#{c}_\d/}
-        top_keys.each do |k|
-          msg << "\n#{res[k]}"
-        end
-        msg << "\n\n"
+      events.each do |event|
+        msg << "@#{event.home_team.full_name} #{event.home_points_scored}\n"
+        msg << "#{event.away_team.full_name} #{event.away_points_scored}\n"
+        msg << "------------------------------------\n"
       end
+
     end
 
     def find_flip_card(card)

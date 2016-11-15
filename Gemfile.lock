@@ -59,6 +59,7 @@ GEM
       simple_oauth (~> 0.3.0)
     typhoeus (0.8.0)
       ethon (>= 0.8.0)
+    xmlstats (1.7.0)
 
 PLATFORMS
   ruby
@@ -73,6 +74,7 @@ DEPENDENCIES
   thin
   twitter
   typhoeus
+  xmlstats
 
 BUNDLED WITH
-   1.11.2
+   1.13.3
