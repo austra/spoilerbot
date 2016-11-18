@@ -300,9 +300,39 @@ module SpoilerBot
       Xmlstats.contact_info = "#{ENV['XMLSTATS_CONTACT']}"
       events = Xmlstats.events(Date.parse(date), :nba)
       msg = ""
+      home_hash = away_hash = {}
       events.each do |event|
+        event_id = event.event_id
+        box = Xmlstats.nba_box_score(event_id)
+        
+        box.away_stats.each do |p|
+          away_hash.merge!(p.display_name => {:points => p.points, :rebounds => p.rebounds, :assists => p.assists})
+        end
+        
+        box.home_stats.each do |p|
+          home_hash.merge!(p.display_name => {:points => p.points, :rebounds => p.rebounds, :assists => p.assists})
+        end
+        
+        home_top_points = home_hash.sort_by { |k, v| v[:points] }.reverse.first
+        home_top_rebounds = home_hash.sort_by { |k, v| v[:rebounds] }.reverse.first
+        home_top_assists = home_hash.sort_by { |k, v| v[:assists] }.reverse.first
+        home_top_points_msg = "Pts: #{home_top_points[0]}: #{home_top_points[1][:points]}"
+        home_top_rebounds_msg = "Reb: #{home_top_rebounds[0]}: #{home_top_rebounds[1][:rebounds]}"
+        home_top_assists_msg = "Ast: #{home_top_assists[0]}: #{home_top_assists[1][:assists]}"
+        home_top_msg = "#{home_top_points_msg}\n#{home_top_rebounds_msg}\n#{home_top_assists_msg}"
+
+        away_top_points = away_hash.sort_by { |k, v| v[:points] }.reverse.first
+        away_top_rebounds = away_hash.sort_by { |k, v| v[:rebounds] }.reverse.first
+        away_top_assists = away_hash.sort_by { |k, v| v[:assists] }.reverse.first
+        away_top_points_msg = "Pts: #{away_top_points[0]}: #{away_top_points[1][:points]}"
+        away_top_rebounds_msg = "Reb: #{away_top_rebounds[0]}: #{away_top_rebounds[1][:rebounds]}"
+        away_top_assists_msg = "Ast: #{away_top_assists[0]}: #{away_top_assists[1][:assists]}"
+        away_top_msg = "#{away_top_points_msg}\n#{away_top_rebounds_msg}\n#{away_top_assists_msg}"
+        
         msg << "@#{event.home_team.full_name} #{event.home_points_scored}\n"
+        msg << "#{home_top_msg}\n"
         msg << "#{event.away_team.full_name} #{event.away_points_scored}\n"
+        msg << "#{away_top_msg}\n"
         msg << "------------------------------------\n"
       end
       msg
