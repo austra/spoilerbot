@@ -301,7 +301,8 @@ module SpoilerBot
       events = Xmlstats.events(Date.parse(date), :nba)
       msg = ""
       events.each do |event|
-        home_hash = away_hash = {}
+        home_hash = {}
+        away_hash = {}
         event_id = event.event_id
         box = Xmlstats.nba_box_score(event_id)
         
@@ -329,9 +330,9 @@ module SpoilerBot
         away_top_assists_msg = "Ast: #{away_top_assists[0]}: #{away_top_assists[1][:assists]}"
         away_top_msg = "#{away_top_points_msg}\n#{away_top_rebounds_msg}\n#{away_top_assists_msg}"
         
-        msg << "<b>@#{event.home_team.full_name} #{event.home_points_scored}</b>\n"
+        msg << "@#{event.home_team.full_name} #{event.home_points_scored}\n"
         msg << "#{home_top_msg}\n"
-        msg << "<b>#{event.away_team.full_name} #{event.away_points_scored}</b>\n"
+        msg << "#{event.away_team.full_name} #{event.away_points_scored}\n"
         msg << "#{away_top_msg}\n"
         msg << "------------------------------------\n"
       end
