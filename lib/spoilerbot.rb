@@ -294,6 +294,20 @@ module SpoilerBot
       "#{album["artist"]} - #{album["title"]}\n#{share_url}"
     end
 
+    def get_weather
+      token = "#{ENV['WUNDERGROUND_TOKEN']}"
+      location = "http://api.wunderground.com/api/#{token}/conditions/q/UT/Salt_Lake_City.json"
+      url = URI.parse(location)
+      req = Net::HTTP::Get.new(url.to_s)
+      res = Net::HTTP.start(url.host, url.port) {|http|
+        http.request(req)
+      }
+      res = JSON.parse(res.body)
+      image_url = res["current_observation"]["icon_url"]
+      temp = res["current_observation"]["temp_f"]
+      msg = "#{temp.to_s}\n#{image_url}"
+    end
+
     def get_nba_scores
       date = (Time.now - 24*60*60).strftime("%Y-%m-%d")
       Xmlstats.api_key = "#{ENV['XMLSTATS_TOKEN']}"
@@ -377,6 +391,8 @@ module SpoilerBot
           slack_string = get_random_album
         when "scores"
           get_nba_scores
+        when "weather"
+          get_weather
         when "twitter"
           twitter
         when "reset"
