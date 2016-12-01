@@ -16,6 +16,7 @@ require 'net/http'
 require 'uri'
 require 'digest'
 require 'xmlstats'
+require 'active_support/core_ext/time'
 
 Dotenv.load
 
@@ -308,6 +309,19 @@ module SpoilerBot
       msg = "#{temp.to_s}\n#{image_url}"
     end
 
+    def get_nba_schedule
+      # This is ugly..../
+      date = Time.now.strftime("%Y-%m-%d")
+      Xmlstats.api_key = "#{ENV['XMLSTATS_TOKEN']}"
+      Xmlstats.contact_info = "#{ENV['XMLSTATS_CONTACT']}"
+      events = Xmlstats.events(Date.parse(date), :nba)
+      msg = ""
+      events.each do |event|
+        msg << "#{event.start_date_time.in_time_zone("MST").strftime("%l:%M%p").strip} #{event.away_team.full_name} @ #{event.home_team.full_name}"
+      end
+      msg
+    end
+
     def get_nba_scores
       date = (Time.now - 24*60*60).strftime("%Y-%m-%d")
       Xmlstats.api_key = "#{ENV['XMLSTATS_TOKEN']}"
@@ -391,6 +405,8 @@ module SpoilerBot
           slack_string = get_random_album
         when "scores"
           get_nba_scores
+        when "nba"
+          get_nba_schedule
         when "weather"
           get_weather
         when "twitter"
