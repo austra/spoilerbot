@@ -317,7 +317,7 @@ module SpoilerBot
       events = Xmlstats.events(Date.parse(date), :nba)
       msg = ""
       events.each do |event|
-        msg << "#{event.start_date_time.in_time_zone("MST").strftime("%l:%M%p").strip} #{event.away_team.full_name} @ #{event.home_team.full_name}"
+        msg << "#{event.start_date_time.in_time_zone("MST").strftime("%l:%M%p").strip} #{event.away_team.full_name} @ #{event.home_team.full_name}\n"
       end
       msg
     end
