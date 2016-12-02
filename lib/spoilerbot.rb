@@ -110,7 +110,9 @@ module SpoilerBot
     #http://gatherer.wizards.com/Pages/Search/Default.aspx?page=0&sort=cn+&output=standard&set=["Battle%20for%20Zendikar"]
     
     configure do
-      hearthstone_json = File.read('lib/gvg.json')
+      # card json here: https://market.mashape.com/omgvamp/hearthstone#card-set
+      hearthstone_set = "gangs"
+      hearthstone_json = File.read('lib/hearthstone_' + hearthstone_set + '.json')
       @@hearthstone_cards = JSON.parse(hearthstone_json)
 
       set :static_cache_control, [:public, max_age: 60 * 60 * 24 * 365]
@@ -227,7 +229,7 @@ module SpoilerBot
     end
     
     def get_random_hearthstone_card_image
-      @@hearthstone_cards["cards"].sample["image_url"]
+      @@hearthstone_cards.sample["img"]
     end
 
     def get_death
