@@ -86,7 +86,7 @@ module SpoilerBot
       @@viewed_count = @@viewed_cards.count
 
       @@cards = []
-      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=173&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
+      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=174&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
       cards = doc.css('.card-flip-wrapper')
       cards.each {|c| @@cards << Hash[
@@ -317,12 +317,13 @@ module SpoilerBot
       msg = "#{temp.to_s}\n#{image_url}"
     end
 
-    def get_nba_schedule
+    def get_nba_schedule(team)
       # This is ugly..../
       date = Time.now.strftime("%Y-%m-%d")
       Xmlstats.api_key = "#{ENV['XMLSTATS_TOKEN']}"
       Xmlstats.contact_info = "#{ENV['XMLSTATS_CONTACT']}"
       events = Xmlstats.events(Date.parse(date), :nba)
+      binding.pry
       msg = ""
       events.each do |event|
         msg << "#{event.start_date_time.in_time_zone("MST").strftime("%l:%M%p").strip} #{event.away_team.full_name} @ #{event.home_team.full_name}\n"
@@ -415,8 +416,8 @@ module SpoilerBot
           get_death
         when "scores"
           get_nba_scores
-        when "nba"
-          get_nba_schedule
+        when /nba.*/
+          get_nba_schedule(input.gsub("nba ", ""))
         when "weather"
           get_weather
         when "twitter"
