@@ -376,6 +376,8 @@ module SpoilerBot
     end
 
     def get_movie(movie)
+      puts "#######################"
+      puts movie
       location = "http://www.omdbapi.com/?t=#{movie}&y=&plot=short&r=json"
       url = URI.parse(location)
       req = Net::HTTP::Get.new(url.to_s)
