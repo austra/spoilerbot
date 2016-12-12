@@ -323,7 +323,6 @@ module SpoilerBot
       Xmlstats.api_key = "#{ENV['XMLSTATS_TOKEN']}"
       Xmlstats.contact_info = "#{ENV['XMLSTATS_CONTACT']}"
       events = Xmlstats.events(Date.parse(date), :nba)
-      binding.pry
       msg = ""
       events.each do |event|
         msg << "#{event.start_date_time.in_time_zone("MST").strftime("%l:%M%p").strip} #{event.away_team.full_name} @ #{event.home_team.full_name}\n"
@@ -376,6 +375,18 @@ module SpoilerBot
       msg
     end
 
+    def get_movie(movie)
+      location = "http://www.omdbapi.com/?t=#{movie}&y=&plot=short&r=json"
+      url = URI.parse(location)
+      req = Net::HTTP::Get.new(url.to_s)
+      res = Net::HTTP.start(url.host, url.port) {|http|
+        http.request(req)
+      }
+      res = JSON.parse(res.body)
+      msg = "#{res['Title']}\n#{res['Plot']}\nRating: #{res['imdbRating']}"
+      msg
+    end
+
     def find_flip_card(card)
       @@cards.select{|c| c[:number] == card[:number] && c[:name] != card[:name]}.first
     end
@@ -404,7 +415,7 @@ module SpoilerBot
       # from slack
       if params[:text] && params[:trigger_word]
         input = params[:text].gsub(params[:trigger_word],"").strip
-        
+
         @output = case input
         when "hearthstone"
           get_random_hearthstone_card_image
@@ -418,6 +429,8 @@ module SpoilerBot
           get_nba_scores
         when /nba.*/
           get_nba_schedule(input.gsub("nba ", ""))
+        when /movie.*/
+          get_movie(input.gsub("movie ", ""))
         when "weather"
           get_weather
         when "twitter"
