@@ -385,9 +385,9 @@ module SpoilerBot
       }
       res = JSON.parse(res.body)
 
-      poster = "http://img.omdbapi.com/?i=#{res['imdbID']}&apikey=#{ENV['OMDB_KEY']}"
+      #poster = "http://img.omdbapi.com/?i=#{res['imdbID']}&apikey=#{ENV['OMDB_KEY']}"
 
-      msg = "#{poster}\n#{res['Title']}\n#{res['Plot']}\nRating: #{res['imdbRating']}"
+      msg = "#{res['Title']}\n#{res['Plot']}\nRating: #{res['imdbRating']}"
       msg
     end
 
