@@ -426,9 +426,10 @@ module SpoilerBot
       tickers.each do |ticker|
         stock = stock_data.select{|s| s["t"] == ticker.upcase}.first
         price = stock["l"].to_f
-        qty = my_stocks.collect{|s| s["qty"] if s["ticker"]=="dis"}.compact.first.to_i
+        qty = my_stocks.collect{|s| s["qty"] if s["ticker"] == ticker}.compact.first.to_i
         current_value << price*qty
       end
+
       current_value = current_value.inject(:+)
       return_percent = ((current_value - initial_value)/initial_value).round(2)
       sign = return_percent < 0.0 ? "-" : "+"
