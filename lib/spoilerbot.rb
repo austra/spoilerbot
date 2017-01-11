@@ -23,17 +23,15 @@ Dotenv.load
 module SpoilerBot
   class Web < Sinatra::Base
 
-    def self.get_gist
-      #0dd60b11cc9d3da9fdb7e6e19e3540f8
-      #ENV["GIST"]
+    def self.get_gist gist_id, gist_title
       request = Typhoeus::Request.new(
-        "https://api.github.com/gists/0dd60b11cc9d3da9fdb7e6e19e3540f8",
+        "https://api.github.com/gists/#{gist_id}",
         method: :get,
         headers: { Authorization: "token #{ENV['GIT_TOKEN']}" }
       )
       response = request.run 
       body = JSON.parse(response.body)
-      body["files"]["spoilerbot"]["content"]
+      body["files"]["#{gist_title}"]["content"]
     end
 
     def self.edit_gist content
@@ -81,7 +79,9 @@ module SpoilerBot
       # should probably just use a db and store this stuff....  
       # Otherwise tracking state of viewed cards relies on implementing twitter to store viewed cards
       # or something, which sounds fun anyway, so who needs a db...
-      viewed_cards = get_gist
+      mtg_gist_id = "0dd60b11cc9d3da9fdb7e6e19e3540f8"
+      mtg_gist_title = "spoilerbot"
+      viewed_cards = get_gist(mtg_gist_id, mtg_gist_title)
       @@viewed_cards = viewed_cards.split(",")
       @@viewed_count = @@viewed_cards.count
 
@@ -403,6 +403,38 @@ module SpoilerBot
       @@twitter_client.home_timeline.take(5).map(&:text).join("/n")
     end
 
+    def get_google_stock url
+      request = Typhoeus::Request.new(
+        "#{url}",
+        method: :get
+      )
+      response = request.run 
+      body = JSON.parse(response.body[4..-1])
+    end
+
+    def get_my_stock
+      stock_gist_id = "d4e43b9586ab5d4cb1901ad5cb55e78b"
+      stock_gist_title = "stock"
+      stocks = SpoilerBot::Web.get_gist(stock_gist_id, stock_gist_title)
+      keys = ["ticker","qty","buy_price"]
+      my_stocks = CSV.parse(stocks).map {|a| Hash[ keys.zip(a) ] }
+      initial_value = my_stocks.map{|s| s["qty"].to_i * s["buy_price"].to_f}.inject(:+).round(2)
+      tickers = my_stocks.collect{|k,v| k["ticker"]}
+      url = "http://www.google.com/finance/info?q=NSE:#{tickers.join(",")}"
+      stock_data = get_google_stock url
+      current_value = []
+      tickers.each do |ticker|
+        stock = stock_data.select{|s| s["t"] == ticker.upcase}.first
+        price = stock["l"].to_f
+        qty = my_stocks.collect{|s| s["qty"] if s["ticker"]=="dis"}.compact.first.to_i
+        current_value << price*qty
+      end
+      current_value = current_value.inject(:+)
+      return_percent = (current_value - initial_value)/initial_value
+      sign = return_percent < 0.0 ? "-" : "+"
+      msg = "#{current_value.to_s} (#{sign}#{return_percent}%)"
+    end
+
     get "/post" do
       post_message
     end    
@@ -429,6 +461,8 @@ module SpoilerBot
           slack_string = get_random_album
         when "How will I die?"
           get_death
+        when "my stock"
+          get_my_stock
         when "scores"
           get_nba_scores
         when /nba.*/
