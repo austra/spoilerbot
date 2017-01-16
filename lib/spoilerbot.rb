@@ -418,7 +418,7 @@ module SpoilerBot
       stocks = SpoilerBot::Web.get_gist(stock_gist_id, stock_gist_title)
       keys = ["ticker","qty","buy_price"]
       my_stocks = CSV.parse(stocks).map {|a| Hash[ keys.zip(a) ] }
-      initial_value = my_stocks.map{|s| s["qty"].to_i * s["buy_price"].to_f}.inject(:+).round(2)
+      initial_value = my_stocks.map{|s| s["qty"].to_i * s["buy_price"].to_f}.inject(:+)
       tickers = my_stocks.collect{|k,v| k["ticker"]}
       url = "http://www.google.com/finance/info?q=NSE:#{tickers.join(",")}"
       stock_data = get_google_stock url
@@ -430,8 +430,8 @@ module SpoilerBot
         current_value << price*qty
       end
 
-      current_value = current_value.inject(:+).round(2)
-      return_percent = ((current_value - initial_value)/initial_value).round(2)
+      current_value = '%.2f' % current_value.inject(:+)
+      return_percent = '%.2f' % ((current_value - initial_value)/initial_value)
       sign = return_percent < 0.0 ? "-" : "+"
       msg = "$#{current_value.to_s} (#{sign}#{return_percent}%)"
     end
