@@ -430,7 +430,7 @@ module SpoilerBot
         current_value << price*qty
       end
 
-      current_value = '%.2f' % current_value.inject(:+)
+      current_value = current_value.inject(:+)
       return_percent = '%.2f' % ((current_value - initial_value)/initial_value)
       sign = return_percent < 0.0 ? "-" : "+"
       msg = "$#{current_value.to_s} (#{sign}#{return_percent}%)"
