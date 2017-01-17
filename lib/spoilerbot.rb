@@ -431,9 +431,9 @@ module SpoilerBot
       end
 
       current_value = current_value.inject(:+)
-      return_percent = '%.2f' % ((current_value - initial_value)/initial_value)
+      return_percent = (current_value - initial_value)/initial_value
       sign = return_percent < 0.0 ? "-" : "+"
-      msg = "$#{current_value.to_s} (#{sign}#{return_percent}%)"
+      msg = "$#{'%.2f' % current_value} (#{sign}#{'%.2f' % return_percent}%)"
     end
 
     get "/post" do
