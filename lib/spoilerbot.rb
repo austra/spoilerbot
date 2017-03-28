@@ -86,7 +86,7 @@ module SpoilerBot
       @@viewed_count = @@viewed_cards.count
 
       @@cards = []
-      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=174&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
+      mtgsalvation_url = "http://www.mtgsalvation.com/spoilers/filter?SetID=179&Page=0&Color=&Type=&IncludeUnconfirmed=true&CardID=&CardsPerRequest=250&equals=false&clone=%5Bobject+Object%5D"
       doc = Nokogiri::HTML(open(mtgsalvation_url))
       cards = doc.css('.card-flip-wrapper')
       cards.each {|c| @@cards << Hash[
@@ -481,7 +481,7 @@ module SpoilerBot
           Web.mtg_spoiler_load
           "cards reloaded"
         when "count"
-          "#{@@cards.count} / 205"
+          "#{@@cards.count} / #{@@cards.count + @@viewed_count}"
         else
           @filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
             k,v = s.split(/=/)
