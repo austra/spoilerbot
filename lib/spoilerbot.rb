@@ -17,6 +17,7 @@ require 'uri'
 require 'digest'
 require 'xmlstats'
 require 'active_support/core_ext/time'
+require "coinbase/wallet"
 
 Dotenv.load
 
@@ -454,6 +455,45 @@ module SpoilerBot
         input = params[:text].gsub(params[:trigger_word],"").strip
 
         @output = case input
+        when "coins"
+          url = "https://api.coinbase.com/v2/prices/LTC-USD/sell"
+            request = Typhoeus::Request.new(
+            "#{url}",
+            method: :get
+          )
+          response = request.run 
+          body = JSON.parse(response.body)
+          ltc_price = body["data"]["amount"]
+          ltc_string = "LTC: #{ltc_price}"
+
+          url = "https://api.coinbase.com/v2/prices/ETH-USD/sell"
+            request = Typhoeus::Request.new(
+            "#{url}",
+            method: :get
+          )
+          response = request.run 
+          body = JSON.parse(response.body)
+          eth_price = body["data"]["amount"]
+          eth_string = "ETH: #{eth_price}"
+
+          url = "https://api.coinbase.com/v2/prices/BTC-USD/sell"
+            request = Typhoeus::Request.new(
+            "#{url}",
+            method: :get
+          )
+          response = request.run 
+          body = JSON.parse(response.body)
+          btc_price = body["data"]["amount"]
+          btc_string = "BTC: #{btc_price}"
+
+          
+          ltc = 4 * ltc_price.to_f
+          eth = 2 * eth_price.to_f
+          btc = 1 * btc_price.to_f
+
+          gain = ltc+eth+btc - 2028.93
+          "#{ltc_string}/n#{eth_string}/n#{btc_string}/nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
+
         when "hearthstone"
           get_random_hearthstone_card_image
         when "song"
