@@ -492,7 +492,7 @@ module SpoilerBot
           btc = 1 * btc_price.to_f
 
           gain = ltc+eth+btc - 2028.93
-          "#{ltc_string}/n#{eth_string}/n#{btc_string}/nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
+          "#{ltc_string}\n#{eth_string}\n#{btc_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
 
         when "hearthstone"
           get_random_hearthstone_card_image
