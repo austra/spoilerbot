@@ -486,13 +486,28 @@ module SpoilerBot
           btc_price = body["data"]["amount"]
           btc_string = "BTC: #{btc_price}"
 
+          url = "https://www.bitstamp.net/api/v2/ticker/xrpusd/"
+            request = Typhoeus::Request.new(
+            "#{url}",
+            method: :get
+          )
+          response = request.run 
+          body = JSON.parse(response.body)
+          # {
+          #  "high": "0.36000", "last": "0.35940", "timestamp": "1495350164", 
+          #  "bid": "0.35435", "vwap": "0.34259", "volume": "22617671.13409735", 
+          #  "low": "0.31402", "ask": "0.35940", "open": "0.34000"
+          # }
+          xrp_price = body["last"]
+          xrp_string = "XRP: #{xrp_price}"          
           
           ltc = 4 * ltc_price.to_f
           eth = 2 * eth_price.to_f
-          btc = 1 * btc_price.to_f
+          btc = 0.95 * btc_price.to_f
+          xrp = 281.5 * xrp_price.to_f
 
-          gain = ltc+eth+btc - 2028.93
-          "#{ltc_string}\n#{eth_string}\n#{btc_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
+          gain = ltc+eth+btc+xrp - 2028.93
+          "#{ltc_string}\n#{eth_string}\n#{btc_string}\n#{xrp_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
 
         when "hearthstone"
           get_random_hearthstone_card_image
