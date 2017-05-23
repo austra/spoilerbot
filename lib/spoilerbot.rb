@@ -456,58 +456,43 @@ module SpoilerBot
 
         @output = case input
         when "coins"
-          url = "https://api.coinbase.com/v2/prices/LTC-USD/sell"
-            request = Typhoeus::Request.new(
+          url = "https://poloniex.com/public?command=returnTicker"
+          request = Typhoeus::Request.new(
             "#{url}",
             method: :get
           )
           response = request.run 
           body = JSON.parse(response.body)
-          ltc_price = body["data"]["amount"]
-          ltc_string = "LTC: #{ltc_price}"
 
-          url = "https://api.coinbase.com/v2/prices/ETH-USD/sell"
-            request = Typhoeus::Request.new(
-            "#{url}",
-            method: :get
-          )
-          response = request.run 
-          body = JSON.parse(response.body)
-          eth_price = body["data"]["amount"]
-          eth_string = "ETH: #{eth_price}"
 
-          url = "https://api.coinbase.com/v2/prices/BTC-USD/sell"
-            request = Typhoeus::Request.new(
-            "#{url}",
-            method: :get
-          )
-          response = request.run 
-          body = JSON.parse(response.body)
-          btc_price = body["data"]["amount"]
+
+          btc_price = body["USDT_BTC"]["last"].to_f
           btc_string = "BTC: #{btc_price}"
 
-          url = "https://www.bitstamp.net/api/v2/ticker/xrpusd/"
-            request = Typhoeus::Request.new(
-            "#{url}",
-            method: :get
-          )
-          response = request.run 
-          body = JSON.parse(response.body)
-          # {
-          #  "high": "0.36000", "last": "0.35940", "timestamp": "1495350164", 
-          #  "bid": "0.35435", "vwap": "0.34259", "volume": "22617671.13409735", 
-          #  "low": "0.31402", "ask": "0.35940", "open": "0.34000"
-          # }
-          xrp_price = body["last"]
-          xrp_string = "XRP: #{xrp_price}"          
-          
-          ltc = 4 * ltc_price.to_f
-          eth = 2 * eth_price.to_f
-          btc = 0.95 * btc_price.to_f
-          xrp = 281.5 * xrp_price.to_f
+          ltc_price = body["USDT_LTC"]["last"].to_f
+          ltc_string = "LTC: #{ltc_price}"
 
-          gain = ltc+eth+btc+xrp - 2028.93
-          "#{ltc_string}\n#{eth_string}\n#{btc_string}\n#{xrp_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
+          eth_price = body["USDT_ETH"]["last"].to_f
+          eth_string = "ETH: #{eth_price}"
+
+          xrp_price = body["USDT_XRP"]["last"].to_f
+          xrp_string = "XRP: #{xrp_price}"  
+
+          bcn_price = body["BTC_BCN"]["last"].to_f
+
+          #$0.00396278 
+
+          #0.00000178 
+          ltc = 4 * ltc_price
+          eth = 2 * eth_price
+          btc = 0.90 * btc_price
+          xrp = 281.5 * xrp_price
+          bcn = bcn_price * btc_price
+          bcn_total = (28089.88764044 * bcn_price) * btc_price
+          bcn_string = "BCN: #{bcn}"
+
+          gain = ltc+eth+btc+xrp+bcn_total - 2028.93
+          "#{ltc_string}\n#{eth_string}\n#{btc_string}\n#{xrp_string}\n#{bcn_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
 
         when "hearthstone"
           get_random_hearthstone_card_image
