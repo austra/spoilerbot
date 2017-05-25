@@ -485,7 +485,7 @@ module SpoilerBot
 
           ltc = 4 * ltc_price
           eth = 2 * eth_price
-          btc = (0.746 + 00017405) * btc_price
+          btc = (0.746 + 0.00017405) * btc_price
           xrp = (281.5 + 340.42051720)* xrp_price
           xmr = 2.30494470 * xmr_price
           
@@ -501,7 +501,7 @@ module SpoilerBot
           gnt_total = (277.17572524  * gnt_price) * btc_price
           gnt_string = "GNT: #{gnt}"
 
-          gain = ltc+eth+btc+xrp+bcn_total - 2028.93
+          gain = ltc+eth+btc+xrp+xmr+bcn_total+sc_total+gnt_total - 2028.93
           "#{ltc_string}\n#{eth_string}\n#{btc_string}\n#{xrp_string}\n#{bcn_string}\n#{xmr_string}\n#{sc_string}\n#{gnt_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
 
         when "hearthstone"
