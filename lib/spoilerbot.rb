@@ -464,10 +464,11 @@ module SpoilerBot
           response = request.run 
           body = JSON.parse(response.body)
 
-
-
           btc_price = body["USDT_BTC"]["last"].to_f
           btc_string = "BTC: #{btc_price}"
+
+          xmr_price = body["USDT_XMR"]["last"].to_f
+          xmr_string = "XMR: #{xmr_price}"
 
           ltc_price = body["USDT_LTC"]["last"].to_f
           ltc_string = "LTC: #{ltc_price}"
@@ -479,20 +480,28 @@ module SpoilerBot
           xrp_string = "XRP: #{xrp_price}"  
 
           bcn_price = body["BTC_BCN"]["last"].to_f
+          gnt_price = body["BTC_GNT"]["last"].to_f
 
-          #$0.00396278 
-
-          #0.00000178 
           ltc = 4 * ltc_price
           eth = 2 * eth_price
-          btc = 0.90 * btc_price
-          xrp = 281.5 * xrp_price
+          btc = (0.746 + 00017405) * btc_price
+          xrp = (281.5 + 340.42051720)* xrp_price
+          xmr = 2.30494470 * xmr_price
+          
+          sc = scn_price * btc_price
+          sc_total = (92.07848893 * sc_price) * btc_price
+          sc_string = "SC: #{sc}"
+          
           bcn = bcn_price * btc_price
           bcn_total = (28089.88764044 * bcn_price) * btc_price
           bcn_string = "BCN: #{bcn}"
 
+          gnt = gnt_price * btc_price
+          gnt_total = (277.17572524  * gnt_price) * btc_price
+          gnt_string = "GNT: #{gnt}"
+
           gain = ltc+eth+btc+xrp+bcn_total - 2028.93
-          "#{ltc_string}\n#{eth_string}\n#{btc_string}\n#{xrp_string}\n#{bcn_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
+          "#{ltc_string}\n#{eth_string}\n#{btc_string}\n#{xrp_string}\n#{bcn_string}\n#{xmr_string}\n#{sc_string}\n#{gnt_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
 
         when "hearthstone"
           get_random_hearthstone_card_image
