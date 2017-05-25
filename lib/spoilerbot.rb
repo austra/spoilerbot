@@ -480,6 +480,7 @@ module SpoilerBot
           xrp_string = "XRP: #{xrp_price}"  
 
           bcn_price = body["BTC_BCN"]["last"].to_f
+          sc_price = body["BTC_SC"]["last"].to_f
           gnt_price = body["BTC_GNT"]["last"].to_f
 
           ltc = 4 * ltc_price
@@ -488,7 +489,7 @@ module SpoilerBot
           xrp = (281.5 + 340.42051720)* xrp_price
           xmr = 2.30494470 * xmr_price
           
-          sc = scn_price * btc_price
+          sc = sc_price * btc_price
           sc_total = (92.07848893 * sc_price) * btc_price
           sc_string = "SC: #{sc}"
           
