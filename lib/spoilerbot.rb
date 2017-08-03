@@ -456,6 +456,14 @@ module SpoilerBot
 
         @output = case input
         when "coins"
+          iota_url = "https://api.bitfinex.com/v1/pubticker/iotusd"
+          iota_request = Typhoeus::Request.new(
+            "#{url}",
+            method: :get
+          )
+          iota_response = iota_request.run
+          iota_body = JSON.parse(iot_response.body)
+
           url = "https://poloniex.com/public?command=returnTicker"
           request = Typhoeus::Request.new(
             "#{url}",
@@ -463,6 +471,9 @@ module SpoilerBot
           )
           response = request.run 
           body = JSON.parse(response.body)
+
+          iota_price = body["last_price"].to_f
+          iota_string = "IOTA: #{iota_price}"
 
           btc_price = body["USDT_BTC"]["last"].to_f
           btc_string = "BTC: #{btc_price}"
@@ -483,10 +494,11 @@ module SpoilerBot
           sc_price = body["BTC_SC"]["last"].to_f
           gnt_price = body["BTC_GNT"]["last"].to_f
 
-          ltc = 4 * ltc_price
+          iota = 639.72084908 * iota_price
+          ltc = 7.178 * ltc_price
           eth = 2 * eth_price
-          btc = (0.746 + 0.00017405) * btc_price
-          xrp = (281.5 + 340.42051720)* xrp_price
+          btc = (0.63534456 + 0.00017405) * btc_price
+          xrp = (281.5 + 340.42051720) * xrp_price
           xmr = 2.30494470 * xmr_price
           
           sc = sc_price * btc_price
@@ -501,8 +513,8 @@ module SpoilerBot
           gnt_total = (277.17572524  * gnt_price) * btc_price
           gnt_string = "GNT: #{gnt}"
 
-          gain = ltc+eth+btc+xrp+xmr+bcn_total+sc_total+gnt_total - 2028.93
-          "#{ltc_string}\n#{eth_string}\n#{btc_string}\n#{xrp_string}\n#{bcn_string}\n#{xmr_string}\n#{sc_string}\n#{gnt_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
+          gain = ltc+eth+btc+xrp+xmr+bcn_total+sc_total+gnt_total+iota - 2122.92
+          "#{ltc_string}\n#{eth_string}\n#{btc_string}\n#{xrp_string}\n#{bcn_string}\n#{xmr_string}\n#{sc_string}\n#{gnt_string}\n#{iota_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
 
         when "hearthstone"
           get_random_hearthstone_card_image
