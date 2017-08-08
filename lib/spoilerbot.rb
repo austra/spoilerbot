@@ -466,7 +466,7 @@ module SpoilerBot
           iota_response = iota_request.run
           iota_body = JSON.parse(iota_response.body)
 
-          omg_url = "https://api.bitfinex.com/v1/pubticker/iotusd"
+          omg_url = "https://api.bitfinex.com/v1/pubticker/omgusd"
           omg_request = Typhoeus::Request.new("#{omg_url}", method: :get)
           omg_response = omg_request.run
           omg_body = JSON.parse(omg_response.body)
