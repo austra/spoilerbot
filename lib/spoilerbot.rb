@@ -506,9 +506,9 @@ module SpoilerBot
 
           iota = 639.72084908 * iota_price
           omg = 43.63741146 * omg_price
-          ltc = 7.178 * ltc_price
-          eth = 2 * eth_price
-          btc = (0.63534456 + 0.00017405) * btc_price
+          ltc = 8.178 * ltc_price
+          eth = 3 * eth_price
+          btc = (0.6152 + 0.00017405) * btc_price
           bch = (0.63534456 + 0.00017405) * bch_price
           xrp = (281.5 + 340.42051720) * xrp_price
           xmr = 2.30494470 * xmr_price
@@ -525,7 +525,7 @@ module SpoilerBot
           gnt_total = (277.17572524  * gnt_price) * btc_price
           gnt_string = "GNT: #{gnt} btc"
 
-          gain = ltc+eth+btc+xrp+xmr+bcn_total+sc_total+gnt_total+iota+omg - 2122.92
+          gain = ltc+eth+btc+xrp+xmr+bcn_total+sc_total+gnt_total+iota+omg - 2535.61
           "#{ltc_string}\n#{eth_string}\n#{btc_string}\n#{bch_string}\n#{omg_string}\n#{xrp_string}\n#{bcn_string}\n#{xmr_string}\n#{sc_string}\n#{gnt_string}\n#{iota_string}\nNet: #{gain > 0 ? "+" : "-"}#{gain.to_i}"
 
         when "hearthstone"
