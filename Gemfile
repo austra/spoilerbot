@@ -3,7 +3,8 @@ ruby "2.6.3"
 
 gem "sinatra"
 gem 'thin'
-gem 'nokogiri', '1.6.7'
+#gem 'nokogiri', '1.6.7'
+gem "nokogiri", ">= 1.8.5"
 gem 'pry'
 gem 'haml'
 gem 'typhoeus'
