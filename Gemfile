@@ -14,3 +14,6 @@ gem 'dotenv'
 gem 'xmlstats'
 gem 'activesupport'
 gem 'coinbase'
+#gem "rbattlenet", :path => "/mnt/d/Users/rfox7/Desktop/home/rbattlenet"
+gem 'rbattlenet', github: 'austra/rbattlenet'
+gem 'racksh'

@@ -18,6 +18,7 @@ require 'digest'
 require 'xmlstats'
 require 'active_support/core_ext/time'
 require "coinbase/wallet"
+require 'rbattlenet'
 
 Dotenv.load
 
