@@ -162,7 +162,11 @@ module SpoilerBot
               search_criteria[str.split("=")[0]] = str.split("=")[1]
               current_key = str.split("=")[0]
             else
-              search_criteria[current_key] = search_criteria[current_key] + "-" + str
+              if current_key == "set"
+                search_criteria[current_key] = search_criteria[current_key] + "-" + str
+              else
+                search_criteria[current_key] = search_criteria[current_key] + " " + str
+              end
             end
           end
 
