@@ -146,11 +146,14 @@ module SpoilerBot
     end
     
     post "/spoiler" do
+      puts params
+
       # from slack
-      params[:trigger_word]
+      puts params[:trigger_word]
+      puts params[:test]
       if params[:text] && params[:trigger_word]
         input = params[:text].gsub(params[:trigger_word],"").strip.downcase
-      
+        puts input
         @output = case params[:trigger_word]
         when "hearthstone"
           current_key = ""
