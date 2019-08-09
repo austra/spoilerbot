@@ -38,6 +38,7 @@ module SpoilerBot
 
       @@heroku_url = "http://afternoon-reaches-1103.herokuapp.com"
       RBattlenet.authenticate(client_id: ENV['BLIZZARD_CLIENT_ID'], client_secret: ENV['BLIZZARD_CLIENT_SECRET'])
+      RBattlenet.set_region(region: "us", locale: "en_us")
     end
     
     def add_scope(params)
