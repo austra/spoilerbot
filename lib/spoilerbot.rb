@@ -156,6 +156,13 @@ module SpoilerBot
         @output = case input
         when /hearthstone.*/
           input = input.gsub("hearthstone ", "")
+          input = "set=rise of shadows" if input.empty?
+          
+          if input == "help"
+            help  = "Available Filters: set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
+            help += "\n`spoiler hearthstone set=rise of shadows rarity=legendary"
+            return help
+          end
           current_key = ""
           search_criteria = input.split.each_with_object(Hash.new()) do |str, search_criteria|
             if str.include?("=")
