@@ -149,13 +149,12 @@ module SpoilerBot
       puts params
 
       # from slack
-      puts params[:trigger_word]
-      puts params[:test]
       if params[:text] && params[:trigger_word]
         input = params[:text].gsub(params[:trigger_word],"").strip.downcase
-        puts input
-        @output = case params[:trigger_word]
-        when "hearthstone"
+
+        @output = case input
+        when /hearthstone.*/
+          input = input.gsub("hearthstone ", "")
           current_key = ""
           search_criteria = input.split.each_with_object(Hash.new()) do |str, search_criteria|
             if str.include?("=")
