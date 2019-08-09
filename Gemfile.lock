@@ -1,6 +1,5 @@
-GIT
-  remote: git://github.com/austra/rbattlenet.git
-  revision: db49cb0b3497b0862006fbb12c5fa63fc8aeaa2e
+PATH
+  remote: /mnt/d/Users/rfox7/Desktop/home/rbattlenet
   specs:
     rbattlenet (1.1.3)
       httparty (~> 0.16.1)
