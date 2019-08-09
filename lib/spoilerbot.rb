@@ -153,49 +153,48 @@ module SpoilerBot
       if params[:text] && params[:trigger_word]
         input = params[:text].gsub(params[:trigger_word],"").strip.downcase
 
-        catch :output do
-          @output = case input
-          when /hearthstone.*/
-            input.gsub!("hearthstone", "").lstrip!
-            input = "set=rise of shadows" if input.empty?
-            
-            if input == "help"
-              help  = "Available Filters: set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
-              help += "\n`spoiler hearthstone set=rise of shadows rarity=legendary`"
-              @output = help
-            else
-              current_key = ""
-              search_criteria = input.split.each_with_object(Hash.new()) do |str, search_criteria|
-                if str.include?("=")
-                  search_criteria[str.split("=")[0]] = str.split("=")[1]
-                  current_key = str.split("=")[0]
+        @output = case input
+        when /hearthstone.*/
+          input.gsub!("hearthstone", "").lstrip!
+          input = "set=rise of shadows" if input.empty?
+          
+          if input == "help"
+            help  = "Available Filters: set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
+            help += "\n`spoiler hearthstone set=rise of shadows rarity=legendary`"
+            @output = help
+          else
+            current_key = ""
+            search_criteria = input.split.each_with_object(Hash.new()) do |str, search_criteria|
+              if str.include?("=")
+                search_criteria[str.split("=")[0]] = str.split("=")[1]
+                current_key = str.split("=")[0]
+              else
+                if current_key == "set"
+                  search_criteria[current_key] = search_criteria[current_key] + "-" + str
                 else
-                  if current_key == "set"
-                    search_criteria[current_key] = search_criteria[current_key] + "-" + str
-                  else
-                    search_criteria[current_key] = search_criteria[current_key] + " " + str
-                  end
+                  search_criteria[current_key] = search_criteria[current_key] + " " + str
                 end
               end
+            end
 
-              find_hearthstone_cards(search_criteria)
-            end
-          when "song"
-            get_random_song
-          when "album"
-            get_random_album
-          when "how will i die?"
-            get_death
-          when "twitter"
-            twitter
-          else
-            @filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
-              k,v = s.split(/=/)
-              h[k.to_sym] << v
-              h
-            end
+            find_hearthstone_cards(search_criteria)
+          end
+        when "song"
+          get_random_song
+        when "album"
+          get_random_album
+        when "how will i die?"
+          get_death
+        when "twitter"
+          twitter
+        else
+          @filter = input.split(/ /).inject(Hash.new{|h,k| h[k]=""}) do |h, s|
+            k,v = s.split(/=/)
+            h[k.to_sym] << v
+            h
           end
         end
+        
 
       # straight to heroku
       else
