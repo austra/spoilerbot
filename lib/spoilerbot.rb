@@ -57,7 +57,7 @@ module SpoilerBot
     
     def find_hearthstone_cards(params)
       params = add_scope(params)
-      if params.include?(:name) && params.exclude?(:text_filter)
+      if params.include?(:name) && !params.include?(:text_filter)
         params[:text_filter] = params[:name]
       end
       cards = Hearthstone::Spoiler.find_cards(params)
