@@ -58,7 +58,12 @@ module SpoilerBot
     def find_hearthstone_cards(params)
       params = add_scope(params)
       cards = Hearthstone::Spoiler.find_cards(params)
-      cards["cards"].sample["image"]
+      cards = cards["cards"]
+      if params.keys.include?(:name)
+        card = cards.detect{|card| card["name"].downcase == args[:name].downcase}
+        return card["image"] if card.present?
+      end
+      cards.sample["image"]
     end
 
     def get_death
@@ -159,7 +164,7 @@ module SpoilerBot
           input = "set=rise of shadows" if input.empty?
           
           if input == "help"
-            help  = "Available Filters: set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
+            help  = "Available Filters: name, set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
             help += "\n`spoiler hearthstone set=rise of shadows rarity=legendary`"
             @output = help
           else

@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/austra/rbattlenet.git
-  revision: be4360750569495ec9bee942f4aa87333df17d6f
+  revision: d6fcfd595cadf767199082f889fc5614fe698d1d
   specs:
     rbattlenet (1.1.3)
       httparty (~> 0.16.1)
