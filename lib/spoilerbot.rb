@@ -55,64 +55,17 @@ module SpoilerBot
       response = Typhoeus.post(url, body: {"channel" => "#general", "text" => text}.to_json)
     end
     
-    def make_hearthstone_call(input)
-      input.gsub!("hearthstone", "").lstrip!
-      input = "set=rise of shadows" if input.empty?
-
-      if input == "help"
-        help  = "Available Filters: set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
-        help += "\n`spoiler hearthstone set=rise of shadows rarity=legendary`"
-        return help
-      end
-
-      if input.start_with?("deck")
-        return find_hearthstone_deck(input.gsub("deck", ""))
-      end
-
-      current_key = ""
-      search_criteria = input.split.each_with_object(Hash.new()) do |str, search_criteria|
-        if str.include?("=")
-          search_criteria[str.split("=")[0]] = str.split("=")[1]
-          current_key = str.split("=")[0]
-        else
-          if current_key == "set"
-            search_criteria[current_key] = search_criteria[current_key] + "-" + str
-          else
-            search_criteria[current_key] = search_criteria[current_key] + " " + str
-          end
-        end
-      end
-
-      find_hearthstone_cards(search_criteria)
-    end
-
-    def find_hearthstone_deck(params)
-      puts params
-      #params = add_scope(params)
-      deck = Hearthstone::Spoiler.find_deck(params.strip.chomp)
-      puts "got deck?"
-      puts deck.keys
-      hero = deck["hero"]["name"]
-      hero_class = deck["class"]["name"]
-      deck_format = deck["format"]
-      #cards = Hash[deck['cards'].collect{|c| c["name"]}.group_by(&:itself).map {|k,v| [k, v.size] }]
-      cards = deck['cards']
-        .map{|card| {name: card["name"], cost: card["manaCost"]}}
-        .group_by(&:itself)
-        .map {|card,group| {name: card[:name], cost: card[:cost], qty: group.size}}
-        .sort_by{|c| c[:cost]}
-
-      card_text = cards.each_with_object("") do |card, output|
-        output << "\n\n#{card[:qty]}x (#{card[:cost]}) #{card[:name]}"
-      end
-
-      output = ["Format: #{deck_format}", "Hero: #{hero} - #{hero_class}"].join("\n")
-      output += card_text
-    end
-
     def find_hearthstone_cards(params)
       params = add_scope(params)
       cards = Hearthstone::Spoiler.find_cards(params)
+      if params.include?(:name) && !params.include?(:text_filter)
+        params[:text_filter] = params[:name]
+      end
+      cards = cards["cards"]
+      if params.keys.include?(:name)
+        card = cards.detect{|card| card["name"].downcase == args[:name].downcase}
+        return card["image"] if card.present?
+      end
       cards["cards"].sample["image"]
     end
 
@@ -206,12 +159,34 @@ module SpoilerBot
 
       # from slack
       if params[:text] && params[:trigger_word]
-        input = params[:text].gsub(params[:trigger_word],"").strip
-        input = input.downcase unless input.include?("deck")
+        input = params[:text].gsub(params[:trigger_word],"").strip.downcase
 
         @output = case input
         when /hearthstone.*/
-          make_hearthstone_call(input)
+          input.gsub!("hearthstone", "").lstrip!
+          input = "set=rise of shadows" if input.empty?
+          
+          if input == "help"
+            help  = "Available Filters: set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
+            help += "\n`spoiler hearthstone set=rise of shadows rarity=legendary`"
+            @output = help
+          else
+            current_key = ""
+            search_criteria = input.split.each_with_object(Hash.new()) do |str, search_criteria|
+              if str.include?("=")
+                search_criteria[str.split("=")[0]] = str.split("=")[1]
+                current_key = str.split("=")[0]
+              else
+                if current_key == "set"
+                  search_criteria[current_key] = search_criteria[current_key] + "-" + str
+                else
+                  search_criteria[current_key] = search_criteria[current_key] + " " + str
+                end
+              end
+            end
+
+            find_hearthstone_cards(search_criteria)
+          end
         when "song"
           get_random_song
         when "album"
