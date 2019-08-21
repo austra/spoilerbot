@@ -87,10 +87,11 @@ module SpoilerBot
     end
 
     def find_hearthstone_deck(params)
-
       puts params
       #params = add_scope(params)
-      deck = Hearthstone::Spoiler.find_deck(params)
+      deck = Hearthstone::Spoiler.find_deck(params.strip.chomp)
+      puts "got deck?"
+      puts deck.keys
       hero = deck["hero"]["name"]
       hero_class = deck["class"]["name"]
       deck_format = deck["format"]
@@ -98,6 +99,7 @@ module SpoilerBot
       card_text = cards.each_with_object("") do |(name, count), output|
         output << "/n/n#{count}x #{name}"
       end
+
       output = ["Format: #{deck_format}", "Hero: #{hero} - #{hero_class}"].join("/n")
       output += card_text
     end
