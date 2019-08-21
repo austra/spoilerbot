@@ -97,10 +97,10 @@ module SpoilerBot
       deck_format = deck["format"]
       cards = Hash[deck['cards'].collect{|c| c["name"]}.group_by(&:itself).map {|k,v| [k, v.size] }]
       card_text = cards.each_with_object("") do |(name, count), output|
-        output << "/n/n#{count}x #{name}"
+        output << "\n\n#{count}x #{name}"
       end
 
-      output = ["Format: #{deck_format}", "Hero: #{hero} - #{hero_class}"].join("/n")
+      output = ["Format: #{deck_format}", "Hero: #{hero} - #{hero_class}"].join("\n")
       output += card_text
     end
 
