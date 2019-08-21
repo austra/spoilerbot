@@ -95,9 +95,15 @@ module SpoilerBot
       hero = deck["hero"]["name"]
       hero_class = deck["class"]["name"]
       deck_format = deck["format"]
-      cards = Hash[deck['cards'].collect{|c| c["name"]}.group_by(&:itself).map {|k,v| [k, v.size] }]
-      card_text = cards.each_with_object("") do |(name, count), output|
-        output << "\n\n#{count}x #{name}"
+      #cards = Hash[deck['cards'].collect{|c| c["name"]}.group_by(&:itself).map {|k,v| [k, v.size] }]
+      cards = deck['cards']
+        .map{|card| {name: card["name"], cost: card["manaCost"]}}
+        .group_by(&:itself)
+        .map {|card,group| {name: card[:name], cost: card[:cost], qty: group.size}}
+        .sort_by{|c| c[:cost]}
+
+      card_text = cards.each_with_object("") do |card, output|
+        output << "\n\n#{card[:qty]}x (#{card[:cost]}) #{card[:name]}"
       end
 
       output = ["Format: #{deck_format}", "Hero: #{hero} - #{hero_class}"].join("\n")
