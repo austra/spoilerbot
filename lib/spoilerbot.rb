@@ -55,6 +55,37 @@ module SpoilerBot
       response = Typhoeus.post(url, body: {"channel" => "#general", "text" => text}.to_json)
     end
     
+    def make_hearthstone_call(input)
+      input.gsub!("hearthstone", "").lstrip!
+      input = "set=rise of shadows" if input.empty?
+
+      if input == "help"
+        help  = "Available Filters: set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
+        help += "\n`spoiler hearthstone set=rise of shadows rarity=legendary`"
+        return help
+      end
+
+      if input.start_with?("deck")
+        return find_hearthstone_deck(input.gsub("deck", ""))
+      end
+
+      current_key = ""
+      search_criteria = input.split.each_with_object(Hash.new()) do |str, search_criteria|
+        if str.include?("=")
+          search_criteria[str.split("=")[0]] = str.split("=")[1]
+          current_key = str.split("=")[0]
+        else
+          if current_key == "set"
+            search_criteria[current_key] = search_criteria[current_key] + "-" + str
+          else
+            search_criteria[current_key] = search_criteria[current_key] + " " + str
+          end
+        end
+      end
+
+      find_hearthstone_cards(search_criteria)
+    end
+
     def find_hearthstone_cards(params)
       params = add_scope(params)
       cards = Hearthstone::Spoiler.find_cards(params)
@@ -155,35 +186,12 @@ module SpoilerBot
 
         @output = case input
         when /hearthstone.*/
-          input.gsub!("hearthstone", "").lstrip!
-          input = "set=rise of shadows" if input.empty?
-          
-          if input == "help"
-            help  = "Available Filters: set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
-            help += "\n`spoiler hearthstone set=rise of shadows rarity=legendary`"
-            @output = help
-          else
-            current_key = ""
-            search_criteria = input.split.each_with_object(Hash.new()) do |str, search_criteria|
-              if str.include?("=")
-                search_criteria[str.split("=")[0]] = str.split("=")[1]
-                current_key = str.split("=")[0]
-              else
-                if current_key == "set"
-                  search_criteria[current_key] = search_criteria[current_key] + "-" + str
-                else
-                  search_criteria[current_key] = search_criteria[current_key] + " " + str
-                end
-              end
-            end
-
-            find_hearthstone_cards(search_criteria)
-          end
+          make_hearthstone_call(input)
         when "song"
           get_random_song
         when "album"
           get_random_album
-        when "how will i die?"
+        when /how will i die.*/
           get_death
         when "twitter"
           twitter
