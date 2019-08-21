@@ -87,6 +87,7 @@ module SpoilerBot
     end
 
     def find_hearthstone_deck(params)
+
       puts params
       #params = add_scope(params)
       deck = Hearthstone::Spoiler.find_deck(params)
@@ -197,7 +198,8 @@ module SpoilerBot
 
       # from slack
       if params[:text] && params[:trigger_word]
-        input = params[:text].gsub(params[:trigger_word],"").strip.downcase
+        input = params[:text].gsub(params[:trigger_word],"").strip
+        input = input.downcase unless input.include?("deck")
 
         @output = case input
         when /hearthstone.*/
