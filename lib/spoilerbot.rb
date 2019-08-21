@@ -86,6 +86,21 @@ module SpoilerBot
       find_hearthstone_cards(search_criteria)
     end
 
+    def find_hearthstone_deck(params)
+      puts params
+      #params = add_scope(params)
+      deck = Hearthstone::Spoiler.find_deck(params)
+      hero = deck["hero"]["name"]
+      hero_class = deck["class"]["name"]
+      deck_format = deck["format"]
+      cards = Hash[deck['cards'].collect{|c| c["name"]}.group_by(&:itself).map {|k,v| [k, v.size] }]
+      card_text = cards.each_with_object("") do |(name, count), output|
+        output << "/n/n#{count}x #{name}"
+      end
+      output = ["Format: #{deck_format}", "Hero: #{hero} - #{hero_class}"].join("/n")
+      output += card_text
+    end
+
     def find_hearthstone_cards(params)
       params = add_scope(params)
       cards = Hearthstone::Spoiler.find_cards(params)
