@@ -35,7 +35,6 @@ module SpoilerBot
       set :static_cache_control, [:public, max_age: 60 * 60 * 24 * 365]
 
       pages = []
-
       @@heroku_url = "http://afternoon-reaches-1103.herokuapp.com"
       RBattlenet.authenticate(client_id: ENV['BLIZZARD_CLIENT_ID'], client_secret: ENV['BLIZZARD_CLIENT_SECRET'])
       RBattlenet.set_region(region: "us", locale: "en_us")
@@ -57,7 +56,7 @@ module SpoilerBot
 
     def make_hearthstone_call(input)
       input.gsub!("hearthstone", "").lstrip!
-      input = "set=rise of shadows" if input.empty?
+      input = "set=descent of dragons" if input.empty?
 
       if input == "help"
         help  = "Available Filters: set, class, mana_cost, attack health, collectible, rarity, type, minion_type, keyword, text_filter, sort, order, page, page_size"
@@ -86,18 +85,18 @@ module SpoilerBot
       find_hearthstone_cards(search_criteria)
     end
 
-    def find_hearthstone_cards(params)
-      params = add_scope(params)
-      cards = Hearthstone::Spoiler.find_cards(params)
-      if params.include?(:name) && !params.include?(:text_filter)
-        params[:text_filter] = params[:name]
+    def find_hearthstone_cards(search_criteria)
+      search_criteria = add_scope(search_criteria)
+      cards = Hearthstone::Spoiler.find_cards(search_criteria)
+      if search_criteria.include?(:name) && !search_criteria.include?(:text_filter)
+        search_criteria[:text_filter] = search_criteria[:name]
       end
       cards = cards["cards"]
-      if params.keys.include?(:name)
+      if search_criteria.keys.include?(:name)
         card = cards.detect{|card| card["name"].downcase == args[:name].downcase}
         return card["image"] if card.present?
       end
-      cards["cards"].sample["image"]
+      cards.sample["image"]
     end
 
     def find_hearthstone_deck(params)
